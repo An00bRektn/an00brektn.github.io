@@ -21,7 +21,7 @@ import icon from 'astro-icon'
 // https://astro.build/config
 export default defineConfig({
   site: 'https://an00brektn.github.io',
-  base: '/newblogtest',
+  base: '/notateamserver.xyz',
   integrations: [
     tailwind({
       applyBaseStyles: false,
