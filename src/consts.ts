@@ -19,7 +19,7 @@ export const SITE: Site = {
   EMAIL: 'An00bRektn@proton.me',
   NUM_POSTS_ON_HOMEPAGE: 2,
   POSTS_PER_PAGE: 3,
-  SITEURL: 'https://notateamserver.xyz',
+  SITEURL: 'https://an00brektn.github.io',
 }
 
 export const NAV_LINKS: Link[] = [
