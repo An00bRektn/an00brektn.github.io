@@ -15,13 +15,15 @@ const projects = await getCollection('projects')
 
     <section>
       <div class="min-w-full">
-        <h1 class="mb-4 text-3xl font-bold">Some more about us</h1>
+        <h1 class="mb-4 text-3xl font-bold">About Us <sub>or just me tbh</sub></h1>
         <p class="prose prose-neutral mb-8 dark:prose-invert">
-          {SITE.TITLE} is an opinionated, no-frills static blogging template built
-          with Astro.
+          I go by <code>an00b</code> or <code>nayyyr</code> online, and these are my musings of varying quality.
         </p>
 
-        <h2 class="mb-4 text-2xl font-semibold">Our Projects</h2>
+        <h2 class="mb-4 text-2xl font-semibold">Projects</h2>
+        <p class="prose prose-neutral mb-8 dark:prose-invert">
+          Things that I've personally developed or contributed to! o7
+        </p>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => <ProjectCard project={project} />)}
         </div>

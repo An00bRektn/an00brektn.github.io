@@ -1,7 +1,7 @@
 ---
-name: 'Project B'
-description: 'This is an example project description! You should replace this with a description of your own project.'
-tags: ['Framework A', 'Library B', 'Tool C', 'Resource D']
+name: 'Flyer CTF 2022'
+description: 'A one man effort to put together a bunch of beginner-level CTF challenges for a local university event.'
+tags: ['Docker', 'Microsoft Azure', 'C', 'Python']
 image: '../../../public/static/1200x630.png'
-link: 'https://example.com'
+link: 'https://github.com/An00bRektn/flyer-ctf'
 ---

@@ -1,7 +1,7 @@
 ---
-name: 'Project A'
-description: 'This is an example project description! You should replace this with a description of your own project.'
-tags: ['Framework A', 'Library B', 'Tool C', 'Resource D']
+name: 'Gopher47'
+description: 'An initial foray into C2 implant development - a 3rd party implant for Havoc C2 that cross compiles to Linux and Windows.'
+tags: ['Go', 'Python', 'Havoc C2']
 image: '../../../public/static/1200x630.png'
-link: 'https://example.com'
+link: 'https://github.com/An00bRektn/gopher47'
 ---
