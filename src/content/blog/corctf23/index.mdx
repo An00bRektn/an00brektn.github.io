@@ -212,12 +212,16 @@ while True:
     print(out)
 ```
 
-This was the first of a series of three challenges that escalated on the idea of FizzBuzz, a classic [coding interview question](https://www.youtube.com/watch?v=QPZ0pIK_wsc) and game that kids in the UK play (I guess they have nothing better to there). This challenge starts out with a pretty standard RSA implementation to encrypt the flag, this time adding random bytes to the beginning and end of the flag to prevent unintended solutions in the later versions. We're then given access to a decryption oracle, with a twist. We can give it any RSA ciphertext as an integer, and it will use the private key to decrypt it. However, if it's the original flag, the program will exit. Otherwise, if the plaintext is a multiple of 3, the oracle will print "Fizz", a multiple of 5 will print "Buzz", and a multiple of 15 will print "FizzBuzz". If none of these conditions are met, we're given the computed plaintext.
+This was the first of a series of three challenges that built on the idea of FizzBuzz, a classic [coding interview question](https://www.youtube.com/watch?v=QPZ0pIK_wsc) and game that kids in the UK play (I guess they have nothing better to there). This challenge starts out with a pretty standard RSA implementation to encrypt the flag, this time adding random bytes to the beginning and end of the flag to prevent unintended solutions in the later versions. We're then given access to a decryption oracle, with a twist. We can give it any RSA ciphertext as an integer, and it will use the private key to decrypt it. However, if it's the original flag, the program will exit. Otherwise, if the plaintext is a multiple of 3, the oracle will print "Fizz", a multiple of 5 will print "Buzz", and a multiple of 15 will print "FizzBuzz". If none of these conditions are met, we're given the computed plaintext.
 
 ### Solution
 Like [last year's corCTF](https://notateamserver.xyz/corctf22/#tadpole), the easiest crypto challenge is a simple case of modular arithmetic. We may not be able to directly submit the ciphertext, but we can always modify it. We know that the ciphertext we receive is $$c \equiv m^e \pmod{n}$$. Now suppose we submit the ciphertext $$c' \equiv 2^e * c \pmod{n}$$. Then, the decryption oracle works out like this:
 
-\\[\begin{aligned} & m' \equiv (c')^d \equiv (2^e * c)^d \equiv (2^e * m^e)^d \equiv 2m \pmod{n} \end{aligned}\\]
+$$
+\begin{aligned} 
+    m' \equiv (c')^d \equiv (2^e * c)^d \equiv (2^e * m^e)^d \equiv 2m \pmod{n} 
+\end{aligned}
+$$
 
 We can easily compute the modular inverse of $$2$$ mod $$n$$, so we can multiply that by the output of the decryption oracle to get the flag.
 
@@ -352,9 +356,9 @@ This is a good first step; we can easily decrypt any ciphertext knowing the key.
 ![cbc](https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/CBC_decryption.svg/600px-CBC_decryption.svg.png)
 <sup>Courtesy: [Wikipedia](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_block_chaining_(CBC))</sup>
 
-Unlike CBC encryption, which can only be done one block at a time because it needs to be chained with the previous ciphertext block, CBC decryption can be done in parallel, as we already know all of the ciphertext. In our case, this means $$m_i = \texttt{remove_key}(k,\texttt{remove_key}(c_{i-1}, c_i))$$. Observe that we can actually compute that inner `remove_key()` function, leaving it at a single key being applied to each block: $$m_i = \texttt{remove_key}(k, c'_i)$$. If this was AES, we'd be stuck, but because the algorithm is basically just a Caesar/Vigenere/Shift cipher, we can crack this using frequency analysis. If you're interested in learning exactly how frequency analysis works here, I recommend looking at [Cryptopals Challenge 6](https://cryptopals.com/sets/1/challenges/6), as they do this with XOR. However, writing your own algorithm to score the "English-ness" of candidate plaintexts can be a bit tedious and error prone, so it's much easier to use someone else's implementation like this [online Vigenere cipher tool](https://www.boxentriq.com/code-breaking/vigenere-cipher#tool).
+Unlike CBC encryption, which can only be done one block at a time because it needs to be chained with the previous ciphertext block, CBC decryption can be done in parallel, as we already know all of the ciphertext. In our case, this means $m_i = \texttt{remove\_key}(k,\texttt{remove\_key}(c_{i-1}, c_i))$. Observe that we can actually compute that inner `remove_key()` function, leaving it at a single key being applied to each block: $$m_i = \texttt{remove\_key}(k, c'_i)$$. If this was AES, we'd be stuck, but because the algorithm is basically just a Caesar/Vigenere/Shift cipher, we can crack this using frequency analysis. If you're interested in learning exactly how frequency analysis works here, I recommend looking at [Cryptopals Challenge 6](https://cryptopals.com/sets/1/challenges/6), as they do this with XOR. However, writing your own algorithm to score the "English-ness" of candidate plaintexts can be a bit tedious and error prone, so it's much easier to use someone else's implementation like this [online Vigenere cipher tool](https://www.boxentriq.com/code-breaking/vigenere-cipher#tool).
 
-In summary, to solve this challenge, we can compute $$\texttt{remove_key}(c_{i-1}, c_i)$$ for every ciphertext block, and then put the resulting "unchained ciphertext" into the Vigenere cipher solver, which should give us the key. The tool I linked didn't apply the key it found to the whole plaintext, so I did that part in Python to get the output.
+In summary, to solve this challenge, we can compute $$\texttt{remove\_key}(c_{i-1}, c_i)$$ for every ciphertext block, and then put the resulting "unchained ciphertext" into the Vigenere cipher solver, which should give us the key. The tool I linked didn't apply the key it found to the whole plaintext, so I did that part in Python to get the output.
 
 ```python
 def remove_key(key, block):

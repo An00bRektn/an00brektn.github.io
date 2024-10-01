@@ -90,16 +90,27 @@ if __name__ == '__main__':
 ```
 
 ### Solution
-The `EllipticCurve` class is initializing an elliptic curve in Weierstrass form, that is:
-\\[\begin{align\*} y^2 &= x^3 + ax + b \end{align\*}\\]
+The `EllipticCurve` class is initializing an elliptic curve in Weierstrass form, that is: 
+
+$$
+    y^2 = x^3 + ax + b
+$$
 
 over the field $$\mathbb{Z}_p$$. Since we can generate any number of points, the only unknowns are $$a$$ and $$b$$, which allows us to set up a system of equations.
 
-\\[\begin{align\*} y_1^{2} &= x_1^3 + ax_1 + b_1 \\\\ y_2^2 &= x_1^3 + ax_2 + b_2 \end{align\*}\\]
+$$
+\begin{aligned} 
+    y_1^{2} &= x_1^3 + ax_1 + b_1 \\\\ y_2^2 &= x_1^3 + ax_2 + b_2 
+\end{aligned}
+$$
 
 If you've taken any kind of algebra class, the rearranging should be trivial, but eventually, we get here:
 
-\\[\begin{align\*} a &= (x_1 - x_2)^{-1}(y_1^2 - y_2^2)-(x^3_1 - x^3_2) \\\\ b &= y_2^2 - x^3_1 - ax_1 \end{align\*}\\]
+$$
+\begin{aligned}
+    a &= (x_1 - x_2)^{-1}(y_1^2 - y_2^2)-(x^3_1 - x^3_2) \\\\ b &= y_2^2 - x^3_1 - ax_1 
+\end{aligned}
+$$
 
 So, we can implement this in code.
 
@@ -154,7 +165,7 @@ success(flag)
 **Flag**: `HTB{d3fund_s4v3s_th3_d4y!}`
 (this flag will make sense after covering the intended solution)
 
-Short solution, but that's usually the case with these unintended solution. But now, for the main event.
+Short solution, but that's usually the case with these unintended solutions. But now, for the main event.
 
 ## The Challenge (v2)
 The big difference between version 1 and version 2 is the absence of the point generator.
@@ -190,11 +201,19 @@ while True:
 ### Solution
 With the removal of the point generator, we're limited to one equation, so now we actually have to pay attention to these parameters. When we're given $$a$$ and $$b$$, they get bit shifted right by some amount $$170 \leq r < 380$$. This is hard to write in math, so we can rewrite this as
 
-\\[\begin{align\*} a &= a_t + a_r \\\\ b &= b_t + b_r \end{align\*}\\]
+$$
+\begin{aligned} 
+    a &= a_t + a_r \\ b &= b_t + b_r 
+\end{aligned}
+$$
 
 where $$a_t, b_t$$ represent the truncated numbers we get, and $$a_r, b_r$$ is the value that comes off of the truncation. Knowing this, we can revisit our elliptic curve equation and substitute:
 
-\\[\begin{align\*} y^2 = x^3+ax+b &\rightarrow y^2 = x^3 + (a_t+a_r)x + (b_t+b_r) \\\\ &\rightarrow 0 = x^3 + (a_t+a_r)x + (b_t+b_r) - y^2 \end{align\*}\\]
+$$
+\begin{aligned} 
+    y^2 = x^3+ax+b &\rightarrow y^2 = x^3 + (a_t+a_r)x + (b_t+b_r) \\\\ &\rightarrow 0 = x^3 + (a_t+a_r)x + (b_t+b_r) - y^2 
+\end{aligned}
+$$
 
 We know how all of the variables are related, and the only values we don't know are $$a_r$$ and $$b_r$$, so the question is, how do we solve for them?
 

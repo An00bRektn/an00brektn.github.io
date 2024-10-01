@@ -107,7 +107,11 @@ This is secure because of what's known as the [Discrete Logarithm Problem](https
 
 Now that we understand Diffie-Hellman from a high level, how do we find the secret if Alice never gives us her public key? Well, it's pretty simple. Just say your public key is 1.
 
-\\[\begin{aligned} & K \equiv 1 \equiv 1^x \pmod p \end{aligned}\\]
+$$
+\begin{aligned}
+    K \equiv 1 \equiv 1^x \pmod p 
+\end{aligned}
+$$
 
 1 to any power is 1, so we can then just use the value of 1 to bootstrap our AES encryption as shown in the challenge.
 
@@ -219,7 +223,7 @@ The function of the instance isn't terribly complicated, run one of four predete
 
 We begin by breaking up our message into 32 byte blocks. The initial password is the SHA256 hash a random 32 bytes. For each block in our set of blocks, we will encrypt the block by adding the bytes moduluo 256. We then set the new password to be the SHA256 sum of the encrypted block concatenated with the plaintext block. More visually:
 
-![asdf](https://an00brektn.github.io/img/htb-cyber-apocalypse-22/Pasted image 20220519101132.png)
+![asdf](https://an00brektn.github.io/img/htb-cyber-apocalypse-22/Pasted%20image%2020220519101132.png)
 
 We can actually recover the initial key very easily. Recall that our message is command is being preppended by "Command executed: ". Turns out, the length of "Command executed: cat secret.txt" is exactly 32 bytes. So, we can bruteforce the initial key because the algorithm is pretty fast, and from there, we can run the algorithm as shown in the source code to recover the rest of the plaintext keys. The modulus operation can be reversed by simply subtracting instead of adding, so we're good to go!
 
@@ -382,7 +386,7 @@ For our challenge, we can immediately jump to analyzing the columnar cipher beca
 
 What I struggled with for so long was understanding what `twistedColumnarEncrypt()` was doing because of all of the Python one-liners. After deriving a key (the permutation), we break our plaintext into blocks, but then run `transpose()`. If you've ever taken a Linear Algebra class or have worked with matricies before, you'll remember that a transpose operation will basically flip the rows and the columns, which is exactly what the function does. The encrypt function then shifts the matrix around by rows, and spits out a ciphertext. I struggled to understand this via looking at the code, so I had to write it out by hand:
 
-![asdf](https://an00brektn.github.io/img/htb-cyber-apocalypse-22/Pasted image 20220519103749.png)
+![asdf](https://an00brektn.github.io/img/htb-cyber-apocalypse-22/Pasted%20image%2020220519103749.png)
 
 So, it's really not that hard to actually reverse the encryption at all if you know the permutation. The red indicates how you shouldn't reverse it. You should break it up into blocks of 4 instead of 3 because of the dimensions of the initial setup.
 

@@ -24,7 +24,6 @@ title: 'Nahamcon 2023: Cryptography'
 So maybe I haven't written a blog post in a while, but I was able to make time for [Nahamcon 2023](https://ctftime.org/event/2023) where my team got 35th! I managed to full solve the cryptography category, and while it wasn't terribly difficult, there were a number of math concepts that showed up during the challenges that I thought were good enough for writeups. RSA Intro and Outro covered some RSA basics plus a little bit of algebra. Just One More was a small exercise in solving systems of linear equations. ForgeMe1 and ForgeMe2 were both related to hash length extension attacks. Finally, Signed Jeopardy was about Nintendo trivia and ECDSA nonce reuse.
 
 
-
 ## RSA Intro
 ### Description
 `What *is* RSA? Really Spicy Applesauce? Ridiculously Smart Alpaca? Random Squirrel Alliance? Nope, not at all. Just some dudes who made a cool public-key cryptosystem!`
@@ -89,7 +88,11 @@ There is not much left to discuss here, this challenge was rated "easy" for good
 ### Solution
 As mentioned earlier, for part 1, we can directly compute the private key. To calculate it, we need to solve the below congruence for $$d$$:
 
-\\[\begin{align\*} & ed \equiv 1 \pmod{\phi(n)} \end{align\*}\\]
+$$
+\begin{aligned} 
+    ed \equiv 1 \pmod{\phi(n)} 
+\end{aligned}
+$$
 
 The $$\phi(n)$$ is actually [Euler's Totient Function](https://brilliant.org/wiki/eulers-totient-function/), which computes the number of integers less than $$n$$ that are coprime to $$n$$. If we know that it's a product of two primes, we can simply compute $$\phi(n) = (p-1)(q-1)$$. From there, we can let the Python take over and compute the private key and do the decryption ($$m \equiv c^d\pmod{n}$$).
 
@@ -200,7 +203,11 @@ open('output.txt', 'w').write(f'e: {e}\nd: {d}\nphi: {phi}\nct: {ct}')
 ### Solution
 This challenge is a pretty standard use of RSA, the key difference being the relationship between $$p$$ and $$q$$. The link in the source code has some good background knowledge, but we don't really need to know it to solve the challenge. Here, we generate random 512-bit primes and only stop generating when $$p = 2q + 1$$. In secure implementations of RSA, you do not want your primes to have some algebraic relation, because it's divulging unnecessary information. In this case, recall that $$\phi(n) = (p-1)(q-1)$$. Knowing a relationship between $$p$$ and $$q$$, we can actually construct an equation to solve for $$q$$.
 
-\\[\begin{align\*} \phi(n) &= (p-1)(q-1) \\\\ \phi(n) &= pq - p - q + 1 \\\\ \phi(n) &= (2q+1)q - (2q+1) - q + 1 \\\\ 0 &= 2q(q-1)-\phi(n)\end{align\*}\\]
+$$
+\begin{aligned} 
+    \phi(n) &= (p-1)(q-1) \\\\ \phi(n) &= pq - p - q + 1 \\\\ \phi(n) &= (2q+1)q - (2q+1) - q + 1 \\\\ 0 &= 2q(q-1)-\phi(n)
+\end{aligned}
+$$
 
 We can solve this equation either using the quadratic formula, or by using a library like [sympy](https://www.sympy.org/en/index.html) to solve this symbolic equation. Once we've recovered $$q$$, finding the other numbers follows a similar pattern to what we discussed in the previous challenge.
 
@@ -259,14 +266,22 @@ When I solve cryptography challenges, one thing that helps me is translating sou
 Let's call each element of `arr` $$r_i$$, each character of the flag $$f_i$$, and each resulting sum as $$s_i$$,
 where $$i$$ is the index. We can then rewrite what this code is generating:
 
-\\[\begin{align\*} r_1f_1 + r_2f_2 + r_3f_3 + ... + r_{38}f_{38} &= s_1 \\\\ r_{38}f_1 + r_1f_2 + r_2f_3 + ... + r_{37}f_{38} &= s_2 \\\\ r_{37}f_1 + r_{38}f_2 + r_1f_3 + ... + r_{36}f_{38} &= s_3 \\\\ & \\vdots \\\\ r_3f_1 + r_4f_2 + r_5f_3 + ... + r_2f_{38} &= s_{37} \\\\ \end{align\*}\\]
+$$
+\begin{aligned} 
+    r_1f_1 + r_2f_2 + r_3f_3 + ... + r_{38}f_{38} &= s_1 \\ r_{38}f_1 + r_1f_2 + r_2f_3 + ... + r_{37}f_{38} &= s_2 \\ r_{37}f_1 + r_{38}f_2 + r_1f_3 + ... + r_{36}f_{38} &= s_3 \\ & \vdots \\ r_3f_1 + r_4f_2 + r_5f_3 + ... + r_2f_{38} &= s_{37} \\
+\end{aligned}
+$$
 
 What this is, now, is not some weird for loop, but just a system of linear equations, which we can actually solve.
 
 ### Solution
 If you've only ever taken an algebra or even a calculus course, systems with more than three equations can seem daunting. However, when you study Linear Algebra, finding solutions can feel almost trivial when you have computers. Knowing the random numbers, we can treat those as coefficients, and rewrite this system as a matrix:
 
-\\[\begin{bmatrix} r_1 & r_2 & r_3 & ... & r_{38} & s_1 \\\\ r_{38} & r_1 & r_2 & ... & r_{37} & s_2 \\\\ r_{37} & r_{38} & r_1 & ... & r_{36} & s_3 \\\\ \vdots & \vdots & \vdots & ... & \vdots & \vdots \\\\ r_3 & r_4 & r_5 & ... & r_2 & s_{37} \end{bmatrix}\\]
+$$
+\begin{bmatrix} 
+r_1 & r_2 & r_3 & ... & r_{38} & s_1 \\ r_{38} & r_1 & r_2 & ... & r_{37} & s_2 \\ r_{37} & r_{38} & r_1 & ... & r_{36} & s_3 \\ \vdots & \vdots & \vdots & ... & \vdots & \vdots \\ r_3 & r_4 & r_5 & ... & r_2 & s_{37} 
+\end{bmatrix}
+$$
 
 Each column represents a variable, in this case, the unknown values of our flag. From here, we want to transform the matrix into what's known as [reduced row echelon form](https://en.wikipedia.org/wiki/Row_echelon_form) (RREF) without changing the solution of the system, because that form (ideally) has 1's along the diagonal and zeroes everywhere else. This means whatever is in the rightmost columns would be the solution to our system.
 
@@ -292,7 +307,11 @@ ref = eqns.rref()
 
 However, if we check the last column of this matrix, we see that the numbers are a bit bigger than what the flag should be (output omitted because it's a lot). Doing some further investigation, it appears our matrix was reduced to something along the lines of:
 
-\\[\begin{bmatrix} 1 & 0 & 0 & ... & k_1 & s'\_1 \\\\ 0 & 1 & 0 & ... & k_2 & s'\_2 \\\\ 0 & 0 & 1 & ... & k\_3 & s'\_3 \\\\ \vdots & \vdots & \vdots & ... & \vdots & \vdots \\\\ 0 & 0 & 0 & ... & s'\_{37} & s\_{37} \end{bmatrix}\\]
+$$
+\begin{bmatrix} 
+    1 & 0 & 0 & ... & k_1 & s'_1 \\ 0 & 1 & 0 & ... & k_2 & s'_2 \\\\ 0 & 0 & 1 & ... & k_3 & s'_3 \\ \vdots & \vdots & \vdots & ... & \vdots & \vdots \\ 0 & 0 & 0 & ... & s'_{37} & s_{37} 
+\end{bmatrix}
+$$
 
 (Note that I'm using new variables since the values are different from the original matrix)
 
@@ -321,6 +340,7 @@ print(bytearray(list(ref.columns()[-1] - (ord('}')*ref.columns()[-2]))).decode()
 ## ForgeMe 1 and 2
 ### Description
 **ForgeMe1**: `Can you break my hashed-based MAC? Below are some resources that may be useful.`
+
 **ForgeMe2**: `Can you break my hashed-based MAC again? Below are some resources that may be useful.`
 
 Author: [Gary](https://github.com/itsecgary)
@@ -669,11 +689,15 @@ We've talked about elliptic curves here before, but not necessarily using them t
 This, assuming the curve is secure, is a very secure way of signing messages. However, as with all CTF challenges, there's a fatal flaw with the implementation we have in this challenge. A nonce is a *"Number used once"* is meant to "seed" our algorithm, and can absolutely be made public, but should **only ever be used once**. The server in this case is reusing a nonce, and knowing that, it only takes two valid signatures to completely reverse the private key, which will let us sign arbitrary messages. 
 
 We can find the nonce like so:
-\\[\begin{align\*} s_1 - s_2 &= k^{-1}(h_1 + r_1d) - k^{-1}(h_2 + r_2d) \\\\ s_1 - s_2 &= k^{-1}(h_1 - h_2 + d(r_1 - r_2))\\\\ s_1 - s_2 &= k^{-1}(h_1 - h_2) \\\\ k &= (h_1 - h_2)(s_1-s_2)^{-1} \end{align\*}\\]
+$$\begin{aligned} s_1 - s_2 &= k^{-1}(h_1 + r_1d) - k^{-1}(h_2 + r_2d) \\\\ s_1 - s_2 &= k^{-1}(h_1 - h_2 + d(r_1 - r_2))\\\\ s_1 - s_2 &= k^{-1}(h_1 - h_2) \\\\ k &= (h_1 - h_2)(s_1-s_2)^{-1} \end{aligned}$$
 
 The $$d(r_1-r_2)$$ disappears because we know $$k$$ is constant, so $$R = kG$$ will always be the same thing, making $$r_1 - r_2 = 0$$. Once we know the nonce, we can then find the private key by rearranging the equation for $$s$$ to be equivalent to $$d$$.
 
-\\[\begin{align\*} s &= k^{-1}(h + rd) \\\\ ks &= h + rd \\\\ d &= (ks - h)r^{-1} \end{align\*}\\]
+$$
+\begin{aligned} 
+    s &= k^{-1}(h + rd) \\ ks &= h + rd \\ d &= (ks - h)r^{-1}
+\end{aligned}
+$$
 
 A bit of jumping around with that work, we're just moving variables back and forth until we've isolated $$d$$. The only challenge, then, is to make sure we're getting the trivia right so we know what the message is. Luckily, the server gives us the public key, which we can use to verify our solutions, which I put in my script (because the difference between "SEATTLE MARINERS" and "THE SEATTLE MARINERS" killed me for at least an hour). I did steal the actual attack implementation from [jvdsn](https://github.com/jvdsn/crypto-attacks), but that was more for speed and I was a bit lazy.
 
