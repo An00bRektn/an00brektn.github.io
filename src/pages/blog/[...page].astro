@@ -42,7 +42,7 @@ const years = Object.keys(postsByYear).sort((a, b) => parseInt(b) - parseInt(a))
         { label: 'Blog', href: '/blog', icon: 'lucide:archive' },
         { label: `Page ${page.currentPage}`, icon: 'lucide:folder-open' },
       ]}
-    />
+    /><br>
 
     <div class="flex min-h-[calc(100vh-18rem)] flex-col gap-y-8">
       {
@@ -60,7 +60,7 @@ const years = Object.keys(postsByYear).sort((a, b) => parseInt(b) - parseInt(a))
         ))
       }
     </div>
-
+    <br>
     <PaginationComponent
       currentPage={page.currentPage}
       totalPages={page.lastPage}

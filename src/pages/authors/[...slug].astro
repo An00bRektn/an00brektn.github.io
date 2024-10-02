@@ -39,11 +39,11 @@ const authorPosts = allPosts
         { href: '/authors', label: 'Authors', icon: 'lucide:users' },
         { label: author.data.name, icon: 'lucide:user' },
       ]}
-    />
-
+    /><br>
+    
     <section>
       <AuthorCard author={author} linkDisabled />
-    </section>
+    </section><br>
     <section class="flex flex-col gap-y-4">
       <h2 class="text-2xl font-semibold">Posts by {author.data.name}</h2>
       {
