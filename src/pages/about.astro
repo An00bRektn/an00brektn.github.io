@@ -11,6 +11,7 @@ const projects = await getCollection('projects')
 
 <Layout title="About" description={SITE.DESCRIPTION}>
   <Container class="flex flex-col gap-y-6">
+  <aside data-pagefind-ignore>
     <Breadcrumbs items={[{ label: 'About', icon: 'lucide:info' }]} />
 
     <section>
