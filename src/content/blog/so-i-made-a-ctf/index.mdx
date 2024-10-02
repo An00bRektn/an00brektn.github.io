@@ -45,7 +45,7 @@ Good CTF challenges, at the end of the day, should have the goal of teaching som
 ### Putting it Together
 If you have good ideas that are able to acknowledge and respect these two questions, your challenge is probably going to be pretty solid. In my case, I was dealing with a group of people who largely weren't that involved in the CTF scene, so while they had a decent academic background, they likely hadn't done real reverse engineering or really developed a methodology to discover vulnerabilities. 
 
-![Pasted image 20220412173902.png](https://an00brektn.github.io/img/flyer-ctf/Pasted image 20220412173902.png)
+![Pasted%20image%2020220412173902.png](https://an00brektn.github.io/img/flyer-ctf/Pasted%20image%2020220412173902.png)
 <sup>Web development is "fun"</sup>
 
 As a result, most of my challenges were pretty textbook for a CTF. However, I did make it a priority to make it possible for a person who was familiar with security/computer science concepts to be able to solve at least one challenge from every category, as long as they had the right mindset. For instance, the Cryptography category was structured like this:
@@ -58,21 +58,21 @@ None of these challenges were remarkably new or novel, but they were fairly new 
 
 > Although Two Time Pad was intentionally made easier by providing two ciphertexts encrypted with the same pad, and a decrypted version of one of those ciphertexts, two people who solved the challenge actually ended up doing the crib drag anyway. This was overkill, but talking with them afterwards, they did learn a lot about the one time pad.
 
-![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted image 20220412172608.png)
+![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted%20image%2020220412172608.png)
 <sup>The resource graph of the deployments, minus the 6 different snapshots I took.</sup>
 ## Part II: All Systems Go!
 Okay, so you've made your challenges, you've tested them thoroughly and made solutions, but you still need to get them deployed. This, for me, was one of the most rewarding parts of putting this project together, because I had never really had to deploy anything in my Computer Science career thus far. Big shoutout to [CSICTF](https://medium.com/csictf/self-hosting-a-ctf-platform-ctfd-90f3f1611587) for putting together a super solid series of posts on how to go about this. I highly recommend reading their posts on setting up the infrastructure, but I'll give a high-level overview of what I did.
 
 Since our club's server was not in operation, I opted to make good use of my student status and use my [Azure for Students](https://azure.microsoft.com/en-us/free/students/) subscription to host the necessary infrastructure. I also used the [GitHub Student Developer Pack](https://education.github.com/pack) to get a domain for free, and I went to work.
 
-![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted image 20220412172741.png)
+![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted%20image%2020220412172741.png)
 <sup>No shot I could have put all of this together in less than 2 months</sup>
 
 Thankfully, I did not have to develop an entire CTF website. The largest, open source CTF framework is [CTFd](https://ctfd.io/) and it's the largest for good reason (not sponsored but it would be cool to be :) ). The project on GitHub comes with basically everything ready to go, all you need is to install [Docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/), and running `docker-compose up -d` in the cloned repo spins up everything for you. There's a Redis and MySQL container to manage accounts and caching, Nginx to do some load balancing and serve the web content, and the actual application itself. 
 
 For any challenges that don't have a deployed instance, the set up is pretty easy from there, as the web front-end takes care of literally everything for you. You can upload challenge files, change the appearance of the page, manage point calculations, and literally anything else you could ever want.
 
-![Pasted image 20220412173623.png](https://an00brektn.github.io/img/flyer-ctf/Pasted image 20220412173623.png)
+![Pasted%20image%2020220412173623.png](https://an00brektn.github.io/img/flyer-ctf/Pasted%20image%2020220412173623.png)
 <sup>It isn't pwn if there isn't some roleplaying...</sup>
 
 For the deployed challenges (i.e. Web and Pwn), you'll need to do a little more work. CTFd doesn't have "deploy" buttons in their free version, so you'll have to do it yourself, unless you want to pay them (but I lack money). Now, if you're smart, you'll use Kubernetes and Docker to make a cluster that anyone can access and blah blah container container cloud blah blah.
@@ -95,7 +95,7 @@ If there's one thing that could have gone a lot better, it's the marketing for t
 
 I realized I needed to get past these trials, and after a long, arduous journey to get prizes in place and having a logo/branding, and spamming my Computer Science discord nonstop, we had...
 
-![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted image 20220412165309.png)
+![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted%20image%2020220412165309.png)
 
 ...only 13 people registered. Including myself because that's how CTFd works.
 
@@ -111,7 +111,7 @@ I can definitely say, by the end of this whole ordeal, I have learned a lot of t
 
 But overall, I'm really happy with how it went, and the amount of learning that happened on my end, and the players' ends, made my way more excited than I thought it would be. Setting up challenges and deploying a whole interface is a super rewarding project for anyone who's been doing CTF stuff for about a year or so, and while I may not do it again next year, I definitely have ideas in store going forward.
 
-![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted image 20220412174012.png)
+![asdf](https://an00brektn.github.io/img/flyer-ctf/Pasted%20image%2020220412174012.png)
 
 You can find the full repository of challenges and source code [here](https://github.com/An00bRektn/flyer-ctf). Since I didn't have a team to work on this, some of the challenges were stolen from other creators because I thought they were very well put together, and so those are put in encrypted zip files out of respect for those creators. Regardless, a majority of it is my own work.
 

@@ -13,7 +13,7 @@ tags:
 title: 'HTB University CTF Writeups: Out of Time'
 ---
 
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121130152.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121130152.png)
 
 ## Intro
 This is probably the challenge I was proudest of completing since I don't have a background in computer engineering. Out of Time was an easy-rated hardware challenge in this year's Hack The Box University CTF. We're given a python script to talk to the hardware running on the other side, and everytime we submit a password, we're given a NumPy array of the power trace. We can leverage this to "brute-force" the password, by means of a power analysis, observing irregular spikes when we input something correct.
@@ -128,11 +128,11 @@ In the code, this "power consumption model" is referred to as "power_trace". The
 ### Google FTW
 My favorite thing about "easy" hardware challenges is that the research is not obscure and really interesting to read through. In this case, I began my search looking for "power consumption model and power trace" on Google.
 
-![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121171531.png)
+![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121171531.png)
 
 I saw a lot of things related to "power analysis", and that paper that had to do with cryptography was a nice indicator that I might be on the right track. I didn't read the paper (out of sheer laziness). I then searched for "power analysis hardware" and found this.
 
-![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121171716.png)
+![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121171716.png)
 
 Naturally, I went to videos and found the following videos, which guided me through this challenge. 
 
@@ -145,7 +145,7 @@ I found the LiveOverflow video first, which introduced me to the idea of Side Ch
 ### No Security Without Physical Security
 For the completely uninitiated, meaning absolutely no knowledge on how circuits work, I'll give a quick run down. It's not fully necessary to understand this part, but I think it helps demystify some stuff.
 
-![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121172857.png)
+![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121172857.png)
 
 The above diagram can be broken down like so:
 - The red box highlights the battery/power supply along with its voltage
@@ -156,7 +156,7 @@ Simply put, when a current travels through a resistor, there is a drop in voltag
 
 When we measure what's going on in the machine with an oscilloscope, we can get a power trace. If it's not very secure, we will visibly be able to see a noticably different jump in the trace, allowing to conclude if something is correct or incorrect simply on a character to character basis.
 
-![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121173919.png)
+![asdf](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121173919.png)
 <sup>Credit: Collin O'Flynn</sup>
 
 ### ChipWhisperer

@@ -169,7 +169,7 @@ ftp>
 
 The only thing from searchsploit for FTP was a DOS attack (which we don't want). I went ahead and looked at the webserver as well.
 
-![buh](https://an00brektn.github.io/img/htb-cap/Pasted image 20210908120607.png)
+![buh](https://an00brektn.github.io/img/htb-cap/Pasted%20image%2020210908120607.png)
 
 Seems like we're already signed in as a user? Looking at the other pages, we find the following pages:
 - `/data` which has a pcap file available for download
@@ -180,17 +180,17 @@ Nothing stood out as particularly interesting on the `ip` and `netstat` pages, a
 
 By clicking the link that brings us to `/data`, we are sent to `/data/1`. I analyzed the pcap file using Wireshark like so.
 
-![asdf](https://an00brektn.github.io/img/htb-cap/Pasted image 20210908121935.png)
+![asdf](https://an00brektn.github.io/img/htb-cap/Pasted%20image%2020210908121935.png)
 
 ## Shell as nathan
 
 Scrolling through this pcap file, unfortunately, doesn't yield much. All of the captured packets are just GET requests to the website we've been looking at. But, recall that the URL we pulled it from was `http://10.10.10.245/data/1`. What if we tried to access `http://10.10.10.245/data/0`?
 
-![asdf](https://an00brektn.github.io/img/htb-cap/Pasted image 20210908122958.png)
+![asdf](https://an00brektn.github.io/img/htb-cap/Pasted%20image%2020210908122958.png)
 
 We get a different pcap file from this web page, and this one has some more useful content in it.
 
-![asdf](https://an00brektn.github.io/img/htb-cap/Pasted image 20210908123512.jpg)
+![asdf](https://an00brektn.github.io/img/htb-cap/Pasted%20image%2020210908123512.jpg)
 
 I guess the FTP credentials were captured while monitoring the webserver. We also see this when following the TCP stream.
 ```sh

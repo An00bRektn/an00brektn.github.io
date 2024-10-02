@@ -15,7 +15,7 @@ tags:
 title: 'HTB Cyber Santa Writeups: Toy Workshop'
 ---
 
-![intro](https://an00brektn.github.io/img/htb-cyber-santa/Pasted image 20211205131825.png)
+![intro](https://an00brektn.github.io/img/htb-cyber-santa/Pasted%20image%2020211205131825.png)
 
 ## Intro
 Although I really should have been working on final projects as this semester comes to a close, HackTheBox ran their "Cyber Santa is Coming to Town" CTF for the last five days. Since school was getting a little demanding, I was not able to spend as much time on the CTF as I would have liked, but there were a few challenges that I'd like to highlight here on this blog because they were interesting.
@@ -31,11 +31,11 @@ Although I really should have been working on final projects as this semester co
 ### Initial Behavior
 Just throwing the address we're given into the search bar gives us this:
 
-![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted image 20211206095114.png)
+![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted%20image%2020211206095114.png)
 
 There's a lot of fancy javascript animation going on, and honestly I could probably watch the "transformation portal" (or whatever it is) for a while. The only functionality that is accessible is when we click on an elf. We're told that the manager is busy, but the message will be forwarded. I can type in whatever I want, and get a "Your message is delivered successfully!" in response.
 
-![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted image 20211206095345.png)
+![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted%20image%2020211206095345.png)
 
 There isn't really anything left to do here unless we want to admire the animation some more.
 
@@ -212,7 +212,7 @@ While I could use netcat to catch the request, I like using [this Python script]
 
 On the website, I'll submit the payload from earlier, replacing `hacker.thm` for the `ngrok` instance that I have, and replacing `https` with `http` because setting up `https` is too much work for a CTF.
 
-![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted image 20211206103343.png)
+![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted%20image%2020211206103343.png)
 
 After a few seconds, I get a request on my Python server.
 

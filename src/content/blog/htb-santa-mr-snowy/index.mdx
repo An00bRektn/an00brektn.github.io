@@ -17,7 +17,7 @@ tags:
 title: 'HTB Cyber Santa Writeups: Mr Snowy'
 ---
 
-![intro](https://an00brektn.github.io/img/htb-cyber-santa/Pasted image 20211205131825.png)
+![intro](https://an00brektn.github.io/img/htb-cyber-santa/Pasted%20image%2020211205131825.png)
 
 ## Intro
 Mr. Snowy was the binary exploitation/pwn challenge released on day 1, and was a classic stack-based buffer overflow, specifically what many call a "ret2win" challenge. After looking at the initial behavior, we'll go into some well-known reverse engineering  and debugging tools, ghidra, radare2, and gdb, and find a function (our "win" function) that will print the flag. With all of this together, we can use the `pwntools` library to make a quick exploit to insert the address of the win function into the RIP, and print out the flag. 
@@ -94,7 +94,7 @@ Before continuning, I'll preface everything here as being a little bit overkill.
 
 Explaining all of ghidra's functions is enough for it's own standalone post, but for now, we'll make a new, non-shared project, import the `mr_snowy` file, and just follow along with the default settings.
 
-![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted image 20211206122847.png)
+![asdf](https://an00brektn.github.io/img/htb-cyber-santa/Pasted%20image%2020211206122847.png)
 
 Once we have the CodeBrowser open, things can look a little intimidating at first. For the time being, all we have to focus on is the "Functions" folder in the "Symbol Tree", the assembler code in the middle, and the code display on the right. If we click on `main` in the "Functions" folder, ghidra returns this.
 

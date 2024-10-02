@@ -14,16 +14,14 @@ tags:
 title: Docker Basics for Fun and Profit
 ---
 
-<img src="https://developers.redhat.com/sites/default/files/styles/article_feature/public/blog/2014/05/homepage-docker-logo.png?itok=zx0e-vcP" style="width:60%;height:60%;background-color:white">
+<img src="https://developers.redhat.com/sites/default/files/styles/article_feature/public/blog/2014/05/homepage-docker-logo.png?itok=zx0e-vcP" style="width:60%;height:60%;background-color:white"></img>
 
 ## Intro
 I love Docker, and it's something I've gotten the chance to play around with for a bit while on a 10 week internship at [ORGANIZATION](https://www.youtube.com/watch?v=cGw-8FrRT1E). From a beginner's perspective, it's something that can appear to be very intimidating, but the ability to spin up quick virtualized environments can be invaluable in the infosec and software engineering space, so I wanted this blog post to serve as a brief introduction to not only what Docker is and how we can use it, but also covering some of the security issues that can arise when used incorrectly.
 
-- buh
-{:toc}
-
 ## I. What's this Whale doing here?
 Quote [AWS](https://aws.amazon.com/docker/):
+
 > "Docker is a software platform that allows you to build, test, and deploy applications quickly. Docker packages software into standardized units called containers that have everything the software needs to run including libraries, system tools, code, and runtime. Using Docker, you can quickly deploy and scale applications into any environment and know your code will run."
 
 Docker was introduced in 2013 to solve the age old issue of "It runs on my machine :/". The idea of "containerization" is fairly simple, we want to separate applications and processes into their own little bubble such that they all pull from the same hardware resources, but they do not step on each other's toes.
@@ -54,6 +52,7 @@ $ docker run -p 127.0.0.1:8888:8888 -it hyperreality/cryptohack:latest
 and now you have a fully operational instance of Jupyter running with SageMath, z3, and Python installed! We'll break this command down soon enough, but hopefully it's enough of a taste of the power of Docker.
 
 ## II. Lemme See its Insides...
+
 > WARNING: The following information is way more than you'd need to start using basic Docker functionality. If you're willing to accept the blackbox that is cgroups, skip to section III. 
 
 Explaining everything that goes into a Docker container and how it works could be its own blog post, but there are people who have already done an excellent job of it, which I'll link here. This section will serve as a brief summary of the concepts discussed in these resources.
@@ -440,7 +439,7 @@ sh -c "echo \$\$ > /tmp/cgrp/x/cgroup.procs"
 From a very high level overview, we are abusing the fact that we are in a privileged container, which allows us to manage cgroups as root on the host, meaning we can create our own cgroup. Once we make a new cgroup (the 'x'), we abuse `notify_on_release`, which will execute some arbitrary comand once the cgroup exits, which we can then use to do quite literally anything as root on the host OS.
 
 ### runc Exploit (CVE-2019-5736)
-In versions of Docker <18.09.2, a vulnerable version of `runc` is used which can be exploited if you can execute `docker exec` as root. It works by overwriting `/bin/sh` with `#!/proc/self/exe`, a symlink to the binary that started the container, which can be leveraged to write to the `runc` binary itself to escalate privileges. This vulnerability is described in further depth by [Unit 42](https://unit42.paloaltonetworks.com/breaking-docker-via-runc-explaining-cve-2019-5736/), and can be seen in [HackTheBox's TheNotebook](https://youtube.com/watch?v=S4FrlMTY0GY&t=1900) machine. You can find a proof of concept [here](https://github.com/Frichetten/CVE-2019-5736-PoC/blob/master/main.go).
+In versions of Docker < 18.09.2, a vulnerable version of `runc` is used which can be exploited if you can execute `docker exec` as root. It works by overwriting `/bin/sh` with `#!/proc/self/exe`, a symlink to the binary that started the container, which can be leveraged to write to the `runc` binary itself to escalate privileges. This vulnerability is described in further depth by [Unit 42](https://unit42.paloaltonetworks.com/breaking-docker-via-runc-explaining-cve-2019-5736/), and can be seen in [HackTheBox's TheNotebook](https://youtube.com/watch?v=S4FrlMTY0GY&t=1900) machine. You can find a proof of concept [here](https://github.com/Frichetten/CVE-2019-5736-PoC/blob/master/main.go).
 
 ### Additional Exploitation Things
 - As mentioned earlier, containers can operate in their own networks, so the same techniques that are used to move laterally on a real network can be applied here to access other containers.

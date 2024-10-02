@@ -42,7 +42,7 @@ And the best part? It's not nearly as complicated as other vulnerabilities of th
 
 If you think you may have been exploited, check the logs for “_The value for the SHELL variable was not found the /etc/shells file_” or “_The value for environment variable […] contains suspicious content_.” However, there is a way to make sure these entries never show up in the first place.
 
-![asdf](https://an00brektn.github.io/img/polkit/Pasted image 20220126120923.png)
+![asdf](https://an00brektn.github.io/img/polkit/Pasted%20image%2020220126120923.png)
 <sup>Couldn't find any pictures for "polkit" that didn't scream a CVE number, so take this penguin instead.</sup>
 
 ### Ok, but what even is Polkit?
@@ -95,7 +95,7 @@ So what's wrong here? Suppose the number of command line arguments is 0, so `arg
 
 By this point, we should see that we can read and write to a section of memory beyond what was intended? But what are we reading and writing?
 
-![adsf](https://an00brektn.github.io/img/polkit/Pasted image 20220126121417.png)
+![adsf](https://an00brektn.github.io/img/polkit/Pasted%20image%2020220126121417.png)
 <sup>Credit: [CyberArk](https://www.cyberark.com/resources/threat-research-blog/a-modern-exploration-of-windows-memory-corruption-exploits-part-i-stack-overflows)</sup>
 <sup>Although this exploit isn't a memory overflow, I liked the picture :)</sup>
 
@@ -114,7 +114,7 @@ Here, we pass the filename to be executed, the arguments we want passed, and an 
 ### Putting it Together
 The memory layout of a process, specifically concerning environment variables, looks like this diagram I stole from my Security class' slides:
 
-![asdf](https://an00brektn.github.io/img/polkit/Pasted image 20220126110458.png)
+![asdf](https://an00brektn.github.io/img/polkit/Pasted%20image%2020220126110458.png)
 
 The `argv[]` array (containing the arguments) and the `envp[]` array (containing the environment variables) are contiguous in memory, meaning they're right next to each other.
 

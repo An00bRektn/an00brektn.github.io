@@ -13,7 +13,7 @@ tags:
 title: 'THM: Wonderland'
 ---
 
-![intro](https://an00brektn.github.io/img/thm-wonderland/Pasted image 20210908104020.png)
+![intro](https://an00brektn.github.io/img/thm-wonderland/Pasted%20image%2020210908104020.png)
 
 ## Intro
 Wonderland is probably one of my favorite machines on TryHackMe, not because it's realistic or anything, but because it teaches a lot of concepts if you haven't been exposed to them before, and I also like literature references. I'll start by following a trail of directories on a webpage to get some credentials which I can use to get on the machine. From there, I'll hijack a python program and a bash script to move laterally, and finally abuse linux capabilities to get root.
@@ -60,7 +60,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 Nothing out of the ordinary yet, except for the fact that the webpage is presumably written in Golang. Let's take a look at that webpage.
 
-![hello_there](https://an00brektn.github.io/img/thm-wonderland/Pasted image 20210908092549.png)
+![hello_there](https://an00brektn.github.io/img/thm-wonderland/Pasted%20image%2020210908092549.png)
 
 A whole lot of nothing. I'll feroxbuster without recursion (because it can sometimes blow up a server) and see if I can find anything useful.
 ```sh
@@ -91,7 +91,7 @@ by Ben "epi" Risher 🤓                 ver: 2.3.3
 
 That `/r` directory is weird. If we navigate to `http://10.10.239.191/r/`, we see this.
 
-![eat_me](https://an00brektn.github.io/img/thm-wonderland/Pasted image 20210908093117.png)
+![eat_me](https://an00brektn.github.io/img/thm-wonderland/Pasted%20image%2020210908093117.png)
 
 The source code doesn't have comments either. 
 
@@ -132,7 +132,7 @@ by Ben "epi" Risher 🤓                 ver: 2.3.3
 
 I think you see where this is going. At `http://10.10.239.191/r/a/b/b/i/t/`, we see this:
 
-![audiojungle](https://an00brektn.github.io/img/thm-wonderland/Pasted image 20210908093658.png)
+![audiojungle](https://an00brektn.github.io/img/thm-wonderland/Pasted%20image%2020210908093658.png)
 
 I went to look at the source code, and I found what are probably credentials.
 ```html

@@ -14,7 +14,7 @@ tags:
 title: 'HTB Cyber Santa Writeups: Persist'
 ---
 
-![intro](https://an00brektn.github.io/img/htb-cyber-santa/Pasted image 20211205131825.png)
+![intro](https://an00brektn.github.io/img/htb-cyber-santa/Pasted%20image%2020211205131825.png)
 
 ## Intro
 Persist was the forensics challenge released on day 3, where we're given a memory dump of Santa's computer, which reportedly has a "slow boot time and a blue window popping up for a split second during startup". We'll take this as a cue to investigate AutoRun Persistence in Windows, and find a Volatility plugin called "winesap" which will show us a number of registry keys, one of which that contains a suspicious PowerShell script that we can decode to get the flag.

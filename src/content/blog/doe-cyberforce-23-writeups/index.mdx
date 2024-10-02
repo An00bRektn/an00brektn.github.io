@@ -36,7 +36,7 @@ Author: @pascal_0x90 (LLNL - Nate)
 ### Challenge
 We're only given the README.md with the description and the packet capture, so we can pop the packet capture right into Wireshark. Since the packet capture is ~14 MB, we can use the statistics tab to get a gist of what's at play here, and we find *a lot* of TLS traffic.
 
-![Pasted image 20231108222526.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231108222526.png)
+![Pasted%20image%2020231108222526.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231108222526.png)
 
 In order to decrypt TLS, we would somehow need to get access to the session keys, which, unless they were transmitted in cleartext at some point over HTTP, we're not getting them. The next most frequent protocol is DNS, which is actually quite interesting given the description.
 
@@ -45,7 +45,7 @@ In order to decrypt TLS, we would somehow need to get access to the session keys
 
 If we filter the packet capture for DNS, we see this in action.
 
-![Pasted image 20231108232104.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231108232104.png)
+![Pasted%20image%2020231108232104.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231108232104.png)
 
 The goal now is to recover the data sent through here. Rather than copy this out by hand, we can use `pyshark` like we did with [corCTF 2022: whack-a-frog](https://notateamserver.xyz/corctf22/#whack-a-frog) to automate this process.
 
@@ -756,19 +756,19 @@ Author: @ANL - Jocelyn
 ### Solution 1: Hardcoded Key
 We're given a file called `smartmeter_management_interface.exe`, some additional information in `Question.md` that just adds some context that isn't necessarily worth mentioning here. If I run the binary, we're immediately hit with roadblock #1.
 
-![Pasted image 20231109001048.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231109001048.png)
+![Pasted%20image%2020231109001048.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231109001048.png)
 
 Ah, a crackme. Of course.
 
 Before jumping to disassembling the binary, let's briefly take a look at what PEStudio tells us. There are no immediately weird looking imports (e.g. `CreateRemoteThread`, `Nt*`), but as soon as we look at strings, we know what were up against.
 
-![Pasted image 20231109001529.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231109001529.png)
+![Pasted%20image%2020231109001529.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231109001529.png)
 
 If it isn't my old enemy Nim. For the uninitiated, [Nim](https://nim-lang.org/) is a language that was very hyped up last year in the red teaming space as something extremely evasive and hard to reverse engineer, while also embracing Python-like simplicity in syntax, yet supporting memory management and macros like languages like Rust or C++ do. An in-depth discussion of the merits of using Nim and other esolangs for malware development is beyond the scope of this blog, but the key factor we'll be dealing with is the reverse engineering bit. 
 
 Nim compiles to C, and then uses a compiler for C to finish it off, meaning symbols and functions get seriously garbled. It's still very possible to work through it, it's just a pain. For languages like Nim, I prefer using [Cutter](https://github.com/rizinorg/cutter) over Ghidra. Once the binary is loaded into Cutter, we can start by looking for the main function. If we use the side bar to search for `main`, we're greeted with 6 different "mains".
 
-![Pasted image 20231109002523.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231109002523.png)
+![Pasted%20image%2020231109002523.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231109002523.png)
 
 For the purposes of reverse engineering, we can usually jump right to `NimMainModule`. Keeping the window open in graph view, we have a little bit of noise from what Nim does at an assembly level, but we can stay focused if we just look for calls to other symbols that look like functions. Eventually, we should find `main__smartmeter95management95interface_528`, which is where we can actually see assembly that corresponds to what we saw with the execution. Let's zoom into the first block of assembly here:
 
@@ -910,7 +910,7 @@ Enter your choice:
 ### Solution 2: Data Deletion
 Finding the other flags is a little bit of a challenge, as we don't really have direction for what to do other than look for vulnerabilities. However, we can do a little bit of metagaming and look for interesting strings, and we find the following.
 
-![Pasted image 20231111225615.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231111225615.png)
+![Pasted%20image%2020231111225615.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231111225615.png)
 
 Since I am privy to the order of the flags, we'll start with the "insecure data deletion". First, let's try to look at this in the program. We have a few options related to configuration management:
 - (3) Add Configuration
@@ -1122,7 +1122,7 @@ Despite the fact that we're not using something like [ysoserial](https://github.
 ### Solution 4: IDOR
 Out last challenge has to do with an insecure direct object reference. We can use the success string to find exactly the code block we want to get to. One thing I learned while solving this is that you can't directly check for X-Refs from the string, you want to scroll up (at least in Cutter) for the `data.XXXXXXX` reference and use that.
 
-![Pasted image 20231112100625.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231112100625.png)
+![Pasted%20image%2020231112100625.png](https://an00brektn.github.io/img/cyberforce23/Pasted%20image%2020231112100625.png)
 
 We're inside the `processConfiguration()` function, and the control flow graph is a little bit more complicated than we might want to look at statically. Let's take a look at what "processing" a configuration does.
 

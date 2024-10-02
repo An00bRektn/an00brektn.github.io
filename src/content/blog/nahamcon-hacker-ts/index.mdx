@@ -30,17 +30,17 @@ Author: [@congon4tor](https://twitter.com/congon4tor)
 
 ## Exploring the Webpage
 We're presented with a webpage that accepts text to be put on an image.
-![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted image 20220430210553.png)
+![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted%20image%2020220430210553.png)
 
 The input says "command", but there doesn't seem to be any kind of command injection happening at all (that wouldn't really make sense anyway). In the top right, you might notice an "Admin" button. Clicking it, we're brought to a new page, but it seems there's some restriction.
 
-![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted image 20220430210749.png)
+![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted%20image%2020220430210749.png)
 
 This is probably our end goal. Typically, when you want to try and access a page that "can only be seen internally", you're either trying to tamper with headers, or you're doing some kind of request forgery, and the latter seems more likely in this case.
 
 After messing around with random inputs, I tried to see if I could insert HTML tags, and it seemed to work.
 
-![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted image 20220430212004.png)
+![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted%20image%2020220430212004.png)
 
 We can also try to get a call back on our own server. I'll use ngrok to generate a url which I can then use to tunnel traffic back to my own VM since my Kali VM is behind two NATs (my physical router and then the virtual network). I'll then set up a listener to listen on port 80.
 
@@ -50,7 +50,7 @@ We can also try to get a call back on our own server. I'll use ngrok to generate
 
 The `fetch()` method in JavaScript can be used to make a GET request, which will let me test if I can make outbound requests. You can read more about it [here](https://developer.mozilla.org/en-US/docs/Web/API/fetch). The payload above is what I would normally use for a challenge like this, but we encounter a little bit of a roadbump.
 
-![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted image 20220430223019.png)
+![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted%20image%2020220430223019.png)
 
 It seems error messages were not properly handled and the program converting the text to the image was leaked, and we now know we're working with [`wkhtmltoimage`](https://wkhtmltopdf.org/). Doing some research, it is specifically a tool to render HTML into a PDF/image using the Qt WebKit rendering engine, which confirms what we observed earlier. The error also suggests that we can probably still run arbitrary JS code, we might just need to change up how we're making that request. `fetch()` doesn't return text, which might be causing the tool to bug out.
 
@@ -93,7 +93,7 @@ Our first payload will put the response on the shirt itself. I'll have it format
 
 Here, we make the request to the `admin` page, but we do a little HTML work to get the page contents to actually show up on the shirt. We define an HTML element 'stuff' with some filler text so we can later use `document.getElementById('stuff').innerHTML` to replace it with the contents of the response, in this case, the admin page. If we submit this, we get a new shirt.
 
-![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted image 20220430225154.png)
+![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted%20image%2020220430225154.png)
 
 Ok, that's cool and all, and you could definitely type out the flag, but I'm lazy, and I really want to copy and paste. Instead of printing to the shirt, we can actually just use a second `XMLHttpRequest` to make a request to our own webserver so we can actually get text that we can mess with. Our payload then becomes slightly larger.
 
@@ -109,7 +109,7 @@ Ok, that's cool and all, and you could definitely type out the flag, but I'm laz
 
 The only thing that's changed here is that instead of replacing a `div` element with the response text, we're going to send it to a server we control. You could also probably use a webhook, but this is what came to mind first. The `btoa(x.responseText)` will convert the data we send into base64. That way, I can decode it locally and make sure that none of the special characters in the HTML get eaten up. If we send this payload, we don't see anything on the T-Shirt.
 
-![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted image 20220430225733.png)
+![asdf](https://an00brektn.github.io/img/nahamcon-2022/Pasted%20image%2020220430225733.png)
 
 But, if we look at our webserver:
 

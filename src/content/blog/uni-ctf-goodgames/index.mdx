@@ -15,7 +15,7 @@ tags:
 title: 'HTB University CTF Writeups: GoodGames'
 ---
 
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121130152.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121130152.png)
 
 ## Intro
 So I wasn't able to get Cyberforce writeups done this week, but I was able to participate in this year's HackTheBox University CTF. Since the rest of my team was busy with real-life stuff, I was on my own, but managed to get a spot in the top 100, which I'll take as a win. There were so many well designed challenges, and I'll be doing writeups on as many as I can (or at least just my favorites).
@@ -57,10 +57,10 @@ At this time, I also tried enumerating for additional virtual hosts/subdomains a
 
 ### Walking the Website
 When we first open the website, we're greeted with the following:
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121133106.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121133106.png)
 
 I guess the name makes sense. Wappalyzer also confirms some of our observations from earlier.
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121133204.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121133204.png)
 
 I'll run `feroxbuster`, but I don't find anything of interest.
 
@@ -97,19 +97,19 @@ by Ben "epi" Risher 🤓                 ver: 2.4.0
 ```
 
 Many of the pages I found were pretty much useless. The `/coming-soon` and `/blog` pages had very little going on and were rabbit holes if you were extra stubborn. This also led me to looking into if this is a previously created template (because of how intrictate it is), which it is. 
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121135314.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121135314.png)
 
 This doesn't help that much, but I just wanted to point that out.
 
 I'll make an account to see what else is going on, and I'll call it "ippsec" because maybe his energy will make me solve this box way faster. The profile page looks like this:
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121135747.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121135747.png)
 
 Again, there's really not much that immediately sticks out. 
 
 ## Shell as root in Container
 ### SQL Injection
 I was stuck here for some time until I realized I needed to go around and actually start trying to break things so I could see weird behavior. I noticed that when you login, it takes you to a welcome page for an awkward amount of time, so I'll send my login request to Burp and see if I can do some basic SQL stuff.
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121140357.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121140357.png)
 
 It worked! From here, there are two approaches you could take: (1) Do the whole SQL injection by hand, trying to find the table name and get the right output and everything, or (2) just use `sqlmap`.
 
@@ -128,28 +128,28 @@ kali@transistor:~/ctf/htb_uni/GoodGames$ cat sqlmaphashes-f4qcmswb.txt
 
 We can then crack these hashes in [Crackstation](https://crackstation.net) to find the passwords "superadministrator" and "password1" respectively. The second password is what I used to register "ippsec", so "superadministrator" must be the admin password. I can use this to sign in as admin.
 
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121141753.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121141753.png)
 
 ### SSTI in Administrator Panel
 Unlike before, there's a small gear at the top right. Clicking on it brings us here.
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121141939.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121141939.png)
 
 I'll add this new subdomain to my `/etc/hosts` file and try again.
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121142050.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121142050.png)
 
 We can login with the credentials we found earlier (admin:superadministrator) to get access to the admin panel.
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121142144.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121142144.png)
 
 This part of the typical HTB challenge is always difficult because a lot of the functions here are absolutely useless. However, if there's one thing I know about CTF creators and Flask, they love putting in some kind of SSTI.
 
 Server-side Template Injection (SSTI for short), is when a user is able to modify some parameter that can control the template engine that is running on the server. This can allow for XSS to RCE. The most common examples I've seen are in Jinja2 from Python and Pugify in Nodejs. There's a nice table to test certain payloads to enumerate the engine, but since we know it's Flask, we can reasonably assume it's Jinja, and can work from there.
 
 If we go to the "My Profile" section, and test the "Full Name" field for SSTI, we get success.
-![intro](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121142528.png)
+![intro](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121142528.png)
 
 Normally, the process of exploiting SSTI to get code execution involves enumerating for a module that will give you that ability, and then inserting your payload. Luckily, the field we're exploiting allows us to input as much text as we want, so we can use the following payload that I picked up from 0xdf's blog a while ago.
 
-![oof](https://an00brektn.github.io/img/uni-ctf/Pasted image 20211121151437.png)
+![oof](https://an00brektn.github.io/img/uni-ctf/Pasted%20image%2020211121151437.png)
 
 <sub>The engine I use to render the markdown for the blog didn't like the syntax, but the payload is on 0xdf's Doctor writeup, and I think PayloadsAllTheThings as well</sub>
 

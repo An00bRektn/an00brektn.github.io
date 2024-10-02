@@ -12,7 +12,7 @@ tags:
 title: Looking Back on Cyberforce 2021
 ---
 
-![Pasted image 20211114121315.png](https://an00brektn.github.io/img/cyberforce2021/Pasted%20image%2020211114121315.png)
+![Pasted%20image%2020211114121315.png](https://an00brektn.github.io/img/cyberforce2021/Pasted%20image%2020211114121315.png)
 
 ## Intro
 Hello! It's definitely been a while. I was trying to keep up with weekly blog posts, but this past month, I've been neck-deep in preparation for this year's **Cyberforce competition**, run by the Department of Energy, mainly Argonne National Labs.
@@ -25,7 +25,7 @@ Unlike the conventional "capture the flag" type competition, this event was kind
 
 As I've said earlier, I hesitate to call this competition a Red versus Blue engagement because it really wasn't at the end of the day; it was moreso an assessment of a wide variety of security-related skills. Below is a relative timeline of events.
 
-![Pasted image 20211114123313.png](https://an00brektn.github.io/img/cyberforce2021/Pasted image 20211114123313.png)
+![Pasted%20image%2020211114123313.png](https://an00brektn.github.io/img/cyberforce2021/Pasted%20image%2020211114123313.png)
 
 Omitted is getting machine access on October 25. With machine access for about a month, we had the following things on the to-do list:
 
@@ -55,7 +55,7 @@ I'll be honest, we did not spend the first week doing very much of anything. App
 
 We were given access to five machines, and the credentials to the domain controller would be given on the day of. Two of the machines were managing the fictional "Kuma Lake Dam" that we were supposed to be working for, so there was some SCADA involved. In addition, there was an Ubuntu 18.04 and a CentOS7 machine that each hosted a SQL server which had the dam's readings (e.g. temperature, rpm, etc.). And finally, we had a Windows 2012 R2 Sever which handled mail, and the primary React-powered web app that we had to maintain for Green team (volunteer users who would access our site). 
 
-![Pasted image 20211114144856.png](https://an00brektn.github.io/img/cyberforce2021/Pasted image 20211114144856.png)
+![Pasted%20image%2020211114144856.png](https://an00brektn.github.io/img/cyberforce2021/Pasted%20image%2020211114144856.png)
 
 I have no clue how blue teams are actually "supposed" to do things, so my main contribution was doing a pseudo-penetration test of the machines. While other team members got their security experience from work and some from school, I was the only one who grinded TryHackMe and Hack The Box really hard. After running an [OpenVAS](https://www.openvas.org/) scan on the network, I made use of some of the tools I already knew how to use, along with the tools my team showed me.
 
@@ -67,13 +67,13 @@ I have no clue how blue teams are actually "supposed" to do things, so my main c
 ### Findings
 Obviously, tools aren't everything and manual enumeration of the systems are necessary. Looking through our documenation again, there were a LOT of vulnerabilities- so much so that we were pretty sure Argonne was implying this company's machines had been hacked before. We found a backdoor that gave a root shell on the logic controller machine. There were 3 separate buffer overflows on the Windows 2012 machine, including SLMail, which is *quite literally* the application they use to teach PWK students how to do a Windows 32-bit buffer overflow. Below is a brief look at what our OpenVAS scan returned.
 
-![Pasted image 20211114132045.png](https://an00brektn.github.io/img/cyberforce2021/Pasted image 20211114132045.png)
+![Pasted%20image%2020211114132045.png](https://an00brektn.github.io/img/cyberforce2021/Pasted%20image%2020211114132045.png)
 
 So yeah, I guess you could say that there was a lot going on. While I went around and identified vulnerabilities and found the appropriate remediation, our team captain was setting up firewalls and Splunk, and another was fixing services that I didn't know how to. Even while this all is happening, we're also trying to help guide three people who had limited experience doing this kind of stuff (luckily they all came around toward the end).
 
 Nothing I've written thus far can accurately depict the despair with which we were working sometimes. We popped off when something was up and running successfully, but when you find out your Windows Server has **not had a vendor update since 2019**, and you need to have a presentation and documentation submitted in the next four hours, it's a little annoying. I've definitely learned a thing or two about system administration and searching for vulnerabilities, but the amount of effort that went in beforehand cannot be understated. Getting the documentation and presentation in was *stressful*.
 
-![Pasted image 20211114144738.png](https://an00brektn.github.io/img/cyberforce2021/Pasted image 20211114144738.png)
+![Pasted%20image%2020211114144738.png](https://an00brektn.github.io/img/cyberforce2021/Pasted%20image%2020211114144738.png)
 
 ## III. Endgame
 With all of the documentation in place, systems hardened to the best of our ability, the oh-so important day arrived. The day was set up like this: we would be on top of our systems from 10 AM to 5 PM CST (almost a 9-5 basically). In that time, unlike typical competitions, the red team did their work in separate phases. They had already scanned for about 3 hours the day before, and they spent the first hour or two trying to black box pen test our systems. Once they had gotten as far as they could, the main part of red team scoring began: **assume breach scoring**.
