@@ -22,7 +22,7 @@ import pagefind from "astro-pagefind";
 // https://astro.build/config
 export default defineConfig({
   site: 'https://an00brektn.github.io',
-  //base: '/notateamserver.xyz',
+  base: '/unguessabletest',
   integrations: [
     tailwind({
       applyBaseStyles: false,
