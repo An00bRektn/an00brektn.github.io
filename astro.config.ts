@@ -17,7 +17,8 @@ import remarkToc from 'remark-toc'
 import sectionize from '@hbsnow/rehype-sectionize'
 
 import icon from 'astro-icon'
-import pagefind from "astro-pagefind";
+import pagefind from 'astro-pagefind';
+import partytown from '@astrojs/partytown';
 
 // https://astro.build/config
 export default defineConfig({
@@ -32,6 +33,7 @@ export default defineConfig({
     pagefind(),
     react(),
     icon(),
+    partytown(),
   ],
   markdown: {
     syntaxHighlight: false,
