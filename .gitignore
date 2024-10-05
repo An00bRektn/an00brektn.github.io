@@ -28,3 +28,8 @@ teaser.pptx
 
 # rough work for migrating blogs
 migrate/
+
+# obsidian
+_drafts/
+.obsidian/
+.trash/
