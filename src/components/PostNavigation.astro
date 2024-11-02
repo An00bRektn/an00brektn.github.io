@@ -7,7 +7,7 @@ import { Icon } from 'astro-icon/components'
 const { prevPost, nextPost } = Astro.props
 ---
 
-<div class="col-start-2 gap-4 sm:flex-row">
+<div class="col-start-2 flex flex-col gap-4 sm:flex-row">
   <Link
     href={nextPost ? `/blog/${nextPost.slug}` : '#'}
     class={cn(
@@ -40,7 +40,8 @@ const { prevPost, nextPost } = Astro.props
     aria-disabled={!prevPost}
   >
     <div class="flex flex-col items-end overflow-hidden">
-      <span class="text-right text-xs text-muted-foreground">Previous Post</span>
+      <span class="text-right text-xs text-muted-foreground">Previous Post</span
+      >
       <span class="w-full truncate text-right text-sm"
         >{prevPost?.data.title || 'Last post!'}</span
       >
