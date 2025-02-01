@@ -11,25 +11,19 @@
 
 astro-erudite is an opinionated, no-frills static blogging template built with [Astro](https://astro.build/), [Tailwind](https://tailwindcss.com/), and [shadcn/ui](https://ui.shadcn.com/). Extraordinarily loosely based off the [Astro Micro](https://astro-micro.vercel.app/) theme by [trevortylerlee](https://github.com/trevortylerlee).
 
-To learn more about why this template exists, read [The State of Static Blogs in 2024](https://astro-erudite.vercel.app/blog/the-state-of-static-blogs), where I share my take on what constitutes a great blogging template and my goals while developing this one.
+> [!NOTE]
+> To learn more about why this template exists, read [The State of Static Blogs in 2024](https://astro-erudite.vercel.app/blog/the-state-of-static-blogs), where I share my take on what constitutes a great blogging template and my goals while developing this one.
 
 ---
 
-## Technology Stack
+## Community Examples
 
-This is a list of the various technologies used to build this website:
+Below are some fantastic examples of websites based on this template. If you wish to add your site to this list, open a pull request!
 
-| Category            | Technology Name                                                                                    |
-| ------------------- | -------------------------------------------------------------------------------------------------- |
-| Framework           | [Astro](https://astro.build/)                                                                      |
-| Styling             | [Tailwind](https://tailwindcss.com)                                                                |
-| Components          | [shadcn/ui](https://ui.shadcn.com/)                                                                |
-| Content             | [MDX](https://mdxjs.com/)                                                                          |
-| Syntax Highlighting | [Shiki](https://github.com/shikijs/shiki) + [rehype-pretty-code](https://rehype-pretty.pages.dev/) |
-| Graphics            | [Figma](https://www.figma.com/)                                                                    |
-| Deployment          | [Vercel](https://vercel.com)                                                                       |
-
----
+| Site | Author | Description/Features | Source |
+|------|--------|----------------------|--------|
+| [enscribe.dev](https://enscribe.dev) | [@jktrn](https://github.com/jktrn) | Heavily modified bento-style homepage with client interactivity, with custom MDX components! | [→](https://github.com/jktrn/enscribe.dev) |
+| [emile.sh](https://emile.sh) | [@echoghi](https://github.com/echoghi) | A minimalist personal blog using the [flexoki](https://stephango.com/flexoki) theme | [→](https://github.com/echoghi/v5) |
 
 ## Features
 
@@ -42,6 +36,20 @@ This is a list of the various technologies used to build this website:
 - [RSS](https://en.wikipedia.org/wiki/RSS) feeds and sitemap generation!
 - Supports author profiles (with a dedicated authors page) and adding multiple authors per post.
 - Supports project tags (with a dedicated tags page) for easy post categorization and discovery.
+
+## Technology Stack
+
+This is a list of the various technologies used to build this template:
+
+| Category            | Technology Name                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| Framework           | [Astro](https://astro.build/)                                                                      |
+| Styling             | [Tailwind](https://tailwindcss.com)                                                                |
+| Components          | [shadcn/ui](https://ui.shadcn.com/)                                                                |
+| Content             | [MDX](https://mdxjs.com/)                                                                          |
+| Syntax Highlighting | [Shiki](https://github.com/shikijs/shiki) + [rehype-pretty-code](https://rehype-pretty.pages.dev/) |
+| Graphics            | [Figma](https://www.figma.com/)                                                                    |
+| Deployment          | [Vercel](https://vercel.com)                                                                       |
 
 ## Getting Started
 
@@ -166,12 +174,12 @@ The blog post schema is defined as follows:
 | `date`        | `coerce.date()` | Must be in `YYYY-MM-DD` format.                                                                                                                                                   | Yes      |
 | `image`       | `image()`       | Must be exactly 1200px &times; 630px.                                                                                                                                             | Optional |
 | `tags`        | `string[]`      | Preferably use kebab-case for these.                                                                                                                                              | Optional |
-| `authors`     | `string[]`      | If the author has a profile, use the slug associated with their Markdown file in `src/content/authors/` (e.g. if their file is named `jane-doe.md`, use `jane-doe` in the array). | Optional |
+| `authors`     | `string[]`      | If the author has a profile, use the id associated with their Markdown file in `src/content/authors/` (e.g. if their file is named `jane-doe.md`, use `jane-doe` in the array). | Optional |
 | `draft`       | `boolean`       | Defaults to `false` if not provided.                                                                                                                                              | Optional |
 
 ### Authors
 
-Add author information in `src/content/authors/` as Markdown files. A file named `[author-name].md` can be associated with a blog post if `"author-name"` (the slug) is added to the `authors` field:
+Add author information in `src/content/authors/` as Markdown files. A file named `[author-name].md` can be associated with a blog post if `"author-name"` (the id) is added to the `authors` field:
 
 ```yml
 ---
@@ -201,7 +209,8 @@ The author schema is defined as follows:
 | `linkedin` | `string.url()`   | Must be a valid URL.                                                                                                                | Optional |
 | `discord`  | `string.url()`   | Must be a valid URL.                                                                                                                | Optional |
 
-You can add as many social media links as you want, as long as you adjust the schema! Make sure you also support the new field in the `src/components/SocialIcons.astro` component.
+> [!TIP]
+> You can add as many social media links as you want, as long as you adjust the schema! Make sure you also support the new field in the `src/components/SocialIcons.astro` component.
 
 ### Projects
 
@@ -230,6 +239,18 @@ The project schema is defined as follows:
 ## License
 
 This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+### Star History
+
+<a href="https://star-history.com/#jktrn/astro-erudite&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=jktrn/astro-erudite&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=jktrn/astro-erudite&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=jktrn/astro-erudite&type=Date" />
+ </picture>
+</a>
 
 ---
 

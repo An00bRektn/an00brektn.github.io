@@ -1,5 +1,5 @@
-import rss from '@astrojs/rss'
 import { SITE } from '@/consts'
+import rss from '@astrojs/rss'
 import type { APIContext } from 'astro'
 import { getCollection } from 'astro:content'
 

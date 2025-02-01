@@ -15,6 +15,7 @@ const tagCounts = blog.reduce((acc, post) => {
   })
   return acc
 }, new Map())
+
 const tags = [...tagCounts.keys()].sort((a, b) => {
   const countDiff = tagCounts.get(b)! - tagCounts.get(a)!
   return countDiff !== 0 ? countDiff : a.localeCompare(b)
@@ -23,11 +24,9 @@ const tags = [...tagCounts.keys()].sort((a, b) => {
 
 <Layout title="Tags" description="A list of all tags used in blog posts">
   <Container class="flex flex-col gap-y-6">
-  <aside data-pagefind-ignore>
-    <Breadcrumbs items={[{ label: 'Tags', icon: 'lucide:tags' }]} /><br>
+    <Breadcrumbs items={[{ label: 'Tags', icon: 'lucide:tags' }]} />
 
     <div class="flex flex-col gap-4">
-      <h1 class="text-3xl font-semibold">Tags</h1>
       <div class="flex flex-wrap gap-2">
         {
           tags.map((tag) => (

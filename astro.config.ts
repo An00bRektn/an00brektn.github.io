@@ -18,23 +18,18 @@ import remarkToc from 'remark-toc'
 import sectionize from '@hbsnow/rehype-sectionize'
 
 import icon from 'astro-icon'
-import pagefind from 'astro-pagefind';
-import partytown from '@astrojs/partytown';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://an00brektn.github.io',
-  //base: '/notateamserver.xyz',
   integrations: [
     tailwind({
       applyBaseStyles: false,
     }),
     sitemap(),
     mdx(),
-    pagefind(),
     react(),
     icon(),
-    partytown(),
   ],
   markdown: {
     syntaxHighlight: false,

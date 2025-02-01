@@ -22,7 +22,6 @@ const blog = (await getCollection('blog'))
 
 <Layout title="Home" description={SITE.DESCRIPTION}>
   <Container class="flex flex-col gap-y-6">
-    <aside data-pagefind-ignore>
     <section>
       <Card>
         <CardHeader>
@@ -46,11 +45,6 @@ const blog = (await getCollection('blog'))
               class="text-foreground"
               underline
               external>GitHub</Link
-            >. Press <code>&sol;</code> to search for a post, powered by <Link
-              href="https://github.com/CloudCannon/pagefind"
-              class="text-foreground"
-              underline
-              external>PageFind</Link
             >.
           </p>
         </CardContent>
