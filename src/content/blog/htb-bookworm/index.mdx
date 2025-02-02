@@ -23,8 +23,6 @@ tags:
 title: 'HTB: Bookworm'
 ---
 
-<img src="https://an00brektn.github.io/img/htb-bookworm/ce825884f29d2fce0d133983b2506272.png" style="width:60%;height:60%"></img>
-
 ## Intro
 Bookworm was my first Insane-rated machine, and while many think it was closer to a Hard, if you're not a fan of JavaScript, this box put you through the ringer. The box is frontloaded with a lengthy and brutal series of XSS/CSRF attacks to discover a hidden download endpoint. The download, under certain circumstances, is vulnerable to path traversal, so we can use it to leak out source code and eventually get a password on the box. I'll then exploit an internal web app to get file read, but end up pivoting to using another "path traversal"-like vulnerability to write into a symlink and get SSH access as another user. The box ends with a command injection into a PostScript template, which wasn't necessarily hard to do, but moreso obscure.
 
