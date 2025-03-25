@@ -2,7 +2,7 @@
 authors:
   - an00b
 date: 2025-03-24 00:00:00
-description: somehow one of the chillest/most stressful exams i've taken in a while
+description: somehow one of the chillest/more exhausting exams i've taken in a while
 image: /public/static/frontmatter/oswe-frontmatter.png
 tags:
   - certification
@@ -44,7 +44,7 @@ One thing I've come to realize is that in the journey to get good at something, 
 
 OSWE, for me at least, was the kind of course I needed. We learn by doing, and OSWE's approach felt like the right one for me to clean up the gaps in my approach. By going through several different case studies and taking more time to dig into what certain syntax is actually doing, it really helps to develop your intuition and troubleshooting skills when it comes to evaluating how vulnerable something actually is. Every module takes a slightly different approach to identifying bugs. Feeling out these various methodologies and understanding how you can incorporate each into your own workflow really solidifies the process of navigating through pretty large code bases. 
 
-I've historically not been a huge fan of web security, but I was so engaged during the Prototype Pollution module, not because the vulnerability class was particularly interesting, but because of what happened afterward. The whole module walks through identifying a server-side prototype pollution vulnerability, and then spinning that alone to RCE via polluting attributes in templating engines, which involved extensive reverse engineering of various templating engines' compilation/lexing flows. I mean, they were doing tricks on it, it was wild.
+I've historically not been a huge fan of web security, but I was so engaged during some chapters like the Prototype Pollution module, not because the vulnerability class was particularly interesting, but because of what they did with it. The whole module walks through identifying a server-side prototype pollution vulnerability, and then spinning that alone to RCE via polluting attributes in templating engines, which involved extensive reverse engineering of various templating engines' compilation/lexing flows. I mean, they were doing tricks on it, it was wild.
 
 Not all modules are built equally, as we'll get into later, but I do think there's something valuable to digging into why certain payloads work. Why does insecure deserialization give RCE? How does this common SSTI payload work in the first place? How can we do more with SQL injections?
 
@@ -52,7 +52,7 @@ Not all modules are built equally, as we'll get into later, but I do think there
 
 While I did enjoy the course as a whole, and the only thing I had to pay with was my time, there's a couple of things I should point out.
 
-**1749. USD. 175 Chipotle Burritos.** I just couldn't pay that amount out of pocket for this, I'm sorry. Even though I haven't taken it, I would still buy the OSCP for this amount because then it would get HR to shut up about arbitrary certifications. [This website](https://z-r0crypt.github.io/blog/2020/01/22/oswe/awae-preparation/) documents a bunch of resources to learn about the different vulnerabilities, and [this repo](https://github.com/PwnAwan/OSWE-Preparation-) has links to install some of the applications that you attack in the source. If you're strapped for cash, I would frankly just look at the [syllabus](https://manage.offsec.com/app/uploads/2023/01/WEB-300-Syllabus-Google-Docs.pdf) and find the vulnerabilities yourself.
+**1749 USD. 175 Chipotle Burritos.** I just couldn't pay that amount out of pocket for this, I'm sorry. Even though I haven't taken it, I would still buy the OSCP for this amount because then it would get HR to shut up about arbitrary certifications. [This website](https://z-r0crypt.github.io/blog/2020/01/22/oswe/awae-preparation/) documents a bunch of resources to learn about the different vulnerabilities, and [this repo](https://github.com/PwnAwan/OSWE-Preparation-) has links to install some of the applications that you attack in the source. If you're strapped for cash, I would frankly just look at the [syllabus](https://manage.offsec.com/app/uploads/2023/01/WEB-300-Syllabus-Google-Docs.pdf) and find the vulnerabilities yourself.
 
 **"So I did some offline grinding"**. Despite my praise being that the course is about methodology, some modules really like to skip ahead to the exploitation, omitting the actually hard part of working through 100+ potentially vulnerable calls. For instance, in the first real chapter, on ManageEngine, the module essentially does this:
 
@@ -60,11 +60,11 @@ While I did enjoy the course as a whole, and the only thing I had to pay with wa
 - Here's a bunch of results! This first one we found could be vulnerable, but it requires authentication, let's keep looking!
 - ***Eventually***, we find the vulnerable route.
 
-What do you mean "eventually"? How did you narrow down 100 different routes? Was it all manual, did you have better RegEx??? 
+What do you mean "eventually"? How did you narrow down 100 different routes? Was it all manual, did you have better regex??? 
 
 Not all modules are like this, but some of them just seem to glaze over details that would've been valuable to see. In hindsight, I guess there were videos I didn't watch, but I highly doubt they stray from the written material that much.
 
-**A lot of this stuff breaks in the cloud.** The existence and impact of file upload vulnerabilities is way less likely in a time where apps are written for the cloud. The impact and feasibility of SSRF is lessened on a well-hardened EC2. Between this and how limited the number of vulnerabilities in course is (there's at least 3 different examples of SQL injection), I wouldn't expect to find some of these attack chains in the while, though there is still value in going through them.
+**A lot of this stuff breaks in the cloud.** The existence and impact of file upload vulnerabilities is way less likely in a time where apps are written for the cloud. The impact and feasibility of SSRF is lessened on a well-hardened EC2. Between this and how limited the number of vulnerabilities in course is (there's at least 3 different examples of SQL injection), I wouldn't expect to find some of these attack chains in the wild, though there is still value in going through them.
 
 **The Lab Environments.** After realizing I had to set my VPN's MTU to 1200, the labs were actually quite responsive. The two Windows modules run on Windows 2012 images, which is kind of a slog to get through, but it gets much more responsive once the rest of the targets are Linux. However, some of the challenge labs, especially the ones that have significant WebSockets or emulated users, feel somewhat unreliable and hard to get working consistently. I didn't run into any stability issues on the actual exam, but it's unfortunate that some of the only practice you get for the exam can be so inconsistent you feel like skipping over it.
 
@@ -84,6 +84,10 @@ Approach the pre-exam prep however you like, but this is what worked for me:
 **Take your time with the course**. Even before getting into the exam itself, I think the best approach with the course is to try and find the vulnerability hinted at by the module title yourself. If the module is "SQL Injection to RCE", go try and find that vector first. If you're stuck for an hour or two, look back at the course until you feel like you need the full walkthrough. With only a few hints, I was actually able to figure out the ErpNext module mostly on my own, which was a great confidence boost and let me work on my own methodology.
 
 **Prepare your automation ahead of time**. Some of the exploits in this course can take time. Scanning networks/ports with SSRF, blind SQL injection, writing helper scripts to predict tokens, etc. Having template code prepared ahead of time that you can just drop into your final exploit script (which you should also probably have a template for) will save you tons of time on the exam. In fact, I wouldn't even wait until the challenge labs to practice automation, try automating the exploits in some of the labs! It'll give you good practice and awareness for what you need to know.
+
+**Do the challenge labs (and most of the Extra Miles)**. The challenge labs are the single closest practice for the exam, so be sure to seriously dig into at least half of them. As of writing, there are now 6(?) different applications, which is maybe less than people would like. However, I would say the challenge labs are the best representations of the kinds of apps you'll see on the exams, so I would for sure set aside time to do them. I got to look at maybe 3/6, but only really solved 2, though I'll probably go back and check them out. 
+
+Additionally, most Extra miles will deepen your understanding of the applications, so I would also recommend doing them as you go through the course. Some people say you should do all of them, I don't think you really have to, but giving each of them an attempt for 30-60 mins and then asking the Discord or forums for a nudge is a perfectly acceptable strategy. I definitely skipped a few, and even if I had more time, I probably wouldn't do all of them (I don't feel like exploiting the same vulnerability with 4 different templates, 2 is probably enough).
 
 **Do some additional reading.** Some people have recommended trying various [HTB boxes](https://docs.google.com/spreadsheets/u/1/d/1dwSMIAPIam0PuRBkCiDI88pU3yzrqqHkDtBngUHNCw8/htmlview#), challenges written by [other](https://github.com/bmdyy/tudo) [students](https://github.com/bmdyy/testr), or even [other](https://pentesterlab.com/exercises/codereview) [courses](https://academy.hackthebox.com/course/preview/secure-coding-101-javascript). I didn't really end up using these resources at all, but what I did find useful was just reading about more web attacks and learning different styles of approaching an attack surface. They won't map one-to-one with the exact vulnerabilities in OSWE, but I think the thought process is valuable to hear. Here are some highlights that I've seen recently:
 
@@ -121,17 +125,35 @@ I've already voiced my opinion on the good and bad here. I don't think the web v
 **Favorite Modules**: Prototype Pollution (Chips), DotNetNuke, OpenITCockpit
 **Least Favorite Modules**: Rudderstack, APIGateway/Directus (SSRF)
 
+### How much coding knowledge is required?
+
+I don't have a background in web development apart from one software engineering class I took in university, but through doing CTFs, I think my ability to quickly mock up scripts in Python has gotten pretty quick. As far as the exploit scripts go, if you think you could write your own tooling in a language of your choice, like a web fuzzer or a port scanner, you have enough knowledge to be comfortable on the exam. All you really need is familiarity with your language's HTTP requests library and knowledge of control flow structures (i.e. loops and conditionals). One thing to note: some modules have you exploit weak token generation or hashing, and it's usually easier to just copy and paste that section of that web app into your own helper script, so it is important to feel good enough about modifying source code in other languages.
+
+As for actually doing code review, if you have sound computer science fundamentals where you can see variables, loops, conditionals, etc. and follow a variable as it passes through the code, you're probably good. That kind of skill really comes with time, but if you want practice, a lot of web challenges on the Hack the Box platform are completely white box and are often written in a variety of languages.
+
 ### Is this only doable by experienced web testers?
 
 Not necessarily. I don't know if I'd even call myself a web expert at this point yet. Having strong fundamental web knowledge will take you a long way here. The exam doesn't have any funky HTTP Request Smuggling, Cache Deception, or injections in obscure languages, but it will force you to think about whether or not filtering just `<` and `>` is effective, or the differences between MySQL and PostgreSQL.
 
-### How does this compare to CWEE or BSCP?
+### Is this course/exam relevant in 2025? Has this helped you in real pentests?
+
+I've touched on this throughout the post, but overall, I'd say the overarching themes are still relevant in 2025. The methodology and approach to following flows within source code, evaluating the effectiveness of defenses, and the foundational HTTP/browser knowledge are all truly evergreen. In fact, the Concord module, covering an attack path where weak CORS and a lack of CSRF protections can lead to more sophisticated cross-site requests, was extremely similar to an attack path I found on an engagement recently. Of course, not every case study shown in the course is as realistic or even that common, but I think the true value of the course is in working through the case studies and internalizing the process as opposed to learning new vulnerabilities. If your intent in pursuing OSWE is the latter, the course really doesn't always do the best job, and you're better off hitting up PortSwigger Academy.
+
+### Do I need to do X before doing OSWE?
+
+I can firmly say that everything you need to know for the exam is in the course. However, and I think I've been repeating this throughout the blog, go develop good web fundamentals before diving into this. You shouldn't be learning about XXE for the first time if you're trying to finish this course in < 1 year.
+
+### How does this compare to BSCP, CBBH, and CWEE?
 
 BSCP is an offering from PortSwigger that focuses on quickly identifying vulnerabilities without source code. The cert was pretty easy compared to OSWE, not because the vulnerabilities were easier, but because BSCP does not stray very far from the labs at all, so if you get close to 100% on PortSwigger Academy, it almost becomes a pattern recognition game.
 
-CWEE the Hack the Box version of OSWE, and I can't really speak to it at all since the modules are all tier 3, i.e. out of range of the subscription I currently have. I trust the folks at HTB Academy to make good content, but I can't help but look at [the outline](https://academy.hackthebox.com/preview/certifications/htb-certified-web-exploitation-expert) and wonder how good it really is. I see mention of OAuth and SAML, which is a very realistic thing to include, but then also mention of TLS downgrades and DNS rebinding, which is cool but not what I necessarily expected. Also looking at the exam format, apparently they expect you to give patches for the vulnerabilities you identify, which is tough. 
+CBBH is Hack the Box's foundational web certification, and as time goes on and they slowly rework and add to the course, some of my information may be outdated. That said, CBBH is strictly black box (unless there's some source code leak on the exam, I haven't taken it, so I wouldn't know), and focuses on your classic web vulnerabilities. CPTS covers most of CBBH, so I can say that the course made me much better at exploiting server-side vulnerabilities, because many of the challenges force you to work through the methodology yourself, but it's still relatively simpler compared to CWEE and OSWE.
 
-Here's a Medium post from d415k, who was the first person to pass the exam: [link](https://medium.com/@d415k/my-cwee-journey-a4f4ee3b54db)
+CWEE the Hack the Box version of OSWE, and I can't really speak to it at all since the modules are all tier 3, i.e. out of range of the subscription I currently have. I trust the folks at HTB Academy to make good content, but I can't help but look at [the outline](https://academy.hackthebox.com/preview/certifications/htb-certified-web-exploitation-expert) and wonder how good it really is. I see mention of OAuth and SAML, which is a very realistic thing to include, but then also mention of TLS downgrades and DNS rebinding, which is cool but not what I necessarily expected. Also looking at the exam format, apparently they expect you to give patches for the vulnerabilities you identify, which is tough. Here's a message from someone who's passed both exams:
+
+![oswe](https://an00brektn.github.io/img/oswe-review/wisefrog-oswe.png)
+
+And here's a Medium post from d415k, who was the first person to pass the CWEE: [link](https://medium.com/@d415k/my-cwee-journey-a4f4ee3b54db)
 
 ## Conclusion
 
