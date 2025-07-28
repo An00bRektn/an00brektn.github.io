@@ -1,33 +1,37 @@
 ---
 import Breadcrumbs from '@/components/Breadcrumbs.astro'
-import Container from '@/components/Container.astro'
+import Link from '@/components/Link.astro'
+import PageHead from '@/components/PageHead.astro'
 import ProjectCard from '@/components/ProjectCard.astro'
-import { SITE } from '@/consts'
 import Layout from '@/layouts/Layout.astro'
-import { getCollection } from 'astro:content'
+import { getAllProjects } from '@/lib/data-utils'
 
-const projects = await getCollection('projects')
+const projects = await getAllProjects()
 ---
 
-<Layout title="About" description={SITE.DESCRIPTION}>
-  <Container class="flex flex-col gap-y-6">
-    <Breadcrumbs items={[{ label: 'About', icon: 'lucide:info' }]} />
-    <br>
-    <section>
-      <div class="min-w-full">
+<Layout class="max-w-3xl">
+  <PageHead slot="head" title="About" />
+  <Breadcrumbs items={[{ label: 'About', icon: 'lucide:info' }]} />
+
+  <section>
+    <div class="min-w-full">
+      <div class="prose mb-8">
+
         <h1 class="mb-4 text-3xl font-bold">About Us <sub>(or just me tbh)</sub></h1>
-        <p class="prose prose-neutral mb-8 dark:prose-invert">
+        <p class="mt-0">
           I go by <code>an00b</code> or <code>nayyyr</code> online, and these are my musings of varying quality.
         </p>
 
         <h2 class="mb-4 text-2xl font-semibold">Projects</h2>
-        <p class="prose prose-neutral mb-8 dark:prose-invert">
+        <p class="mt-0">
           Things that I've personally developed/written/contributed to! o7
         </p>
-        <div class="flex flex-col gap-4">
-          {projects.map((project) => <ProjectCard project={project} />)}
-        </div>
       </div>
-    </section>
-  </Container>
+
+      <h2 class="mb-4 text-2xl font-medium">Example Projects Listing</h2>
+      <div class="flex flex-col gap-4">
+        {projects.map((project) => <ProjectCard project={project} />)}
+      </div>
+    </div>
+  </section>
 </Layout>
