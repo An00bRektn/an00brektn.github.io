@@ -24,3 +24,12 @@ export const SOCIAL_LINKS: SocialLink[] = [
   { href: 'An00bRektn@proton.me', label: 'Email' },
   { href: '/rss.xml', label: 'RSS' },
 ]
+
+export const ICON_MAP: IconMap = {
+  Website: 'lucide:globe',
+  GitHub: 'lucide:github',
+  LinkedIn: 'lucide:linkedin',
+  Twitter: 'lucide:twitter',
+  Email: 'lucide:mail',
+  RSS: 'lucide:rss',
+}
