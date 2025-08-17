@@ -14,6 +14,10 @@ tags:
   - web
 title: "Client-Side Alphabet Soup: SOP, CORS, CSRF, XSS, CSP"
 ---
+
+import Callout from '@/components/Callout.astro'
+import { Icon } from 'astro-icon/components'
+
 ## Intro
 I'm trying to be a little bit more of a web guy these days, and one thing I've realized is how HTTP, the foundation of the web, creates an ecosystem of security measures and configurations that can often be really confusing to follow. HTTP, after all, is a stateless protocol, meaning every request that's sent by a browser/user must carry all of the information needed for a server to respond the way you want it to. As a result, understanding client-side web security, i.e. the relationships between SOP and CORS, CSRF, and XSS, can be extremely challenging to explain if you don't take the time to sit with it (which is me, I didn't take the time to sit with it).
 
