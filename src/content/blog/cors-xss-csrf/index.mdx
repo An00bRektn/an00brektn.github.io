@@ -1,0 +1,520 @@
+---
+authors:
+  - an00b
+date: 2025-08-16 00:00:00
+description: When James Kettle says HTTP/1.1 must die, he has a good reason. When I say HTTP must die, I just don't want to deal with it.
+image: /public/static/frontmatter/cors-csrf-xss.png
+tags:
+  - csrf
+  - xss
+  - content-security-policy
+  - cors
+  - sop
+  - info
+  - web
+title: "Client-Side Alphabet Soup: SOP, CORS, CSRF, XSS, CSP"
+---
+## Intro
+I'm trying to be a little bit more of a web guy these days, and one thing I've realized is how HTTP, the foundation of the web, creates an ecosystem of security measures and configurations that can often be really confusing to follow. HTTP, after all, is a stateless protocol, meaning every request that's sent by a browser/user must carry all of the information needed for a server to respond the way you want it to. As a result, understanding client-side web security, i.e. the relationships between SOP and CORS, CSRF, and XSS, can be extremely challenging to explain if you don't take the time to sit with it (which is me, I didn't take the time to sit with it).
+
+The purpose of this blog is to explore these client-side shenanigans and begin to understand what defenses are effective controls for what vulnerabilities. But before we talk about vulnerabilities, we need to set the scene.
+
+## SOP and CORS
+
+### Same-Origin Policy
+
+The **same-origin policy** (SOP) is a browser protection that prevents JavaScript on one origin from accessing data on another. Why? If SOP didn't exist, my random phishing site could steal data from any other website you're signed into. It would only take a few lines of code to make a GET request to some site you're signed into, (e.g. company email, Slack, etc.) and then exfiltrate that data to an attacker server without ever having signed in myself.
+
+Note that SOP does not prevent a site from issuing the request, rather, it prevents you from accessing the responses. For instance, if I try to make a request to `mail.google.com` from this domain, `notateamserver.xyz`, we get the following response in the dev tools.
+
+![Pasted_image_20250208004529.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250208004529.png)
+
+And this is good! The JavaScript on my site should not be able to read data on other sites like this without there being some kind of agreement. Otherwise, it would be extremely easy for me to read the emails of anyone who visited my site. However, there are also plenty of valid use cases where you'd need to make a request to another site, so in the context of those cases, same-origin policy can be incredibly strict.
+
+### Cross-Origin Resource Sharing
+
+Enter **cross-origin resource sharing** (CORS): an HTTP-header based mechanism to create exceptions for the same-origin policy. In most HTTP requests, you'll see the `Origin` header, which specifies what domain a request came from, and this header cannot be set programmatically. When the request is received, this Origin header is compared against the server's CORS policy, which defines what origins are allowed to load resources. If the origins do not match, the browser stops the response from being accessible.
+
+The idea is fairly simple, but let's take a look at how this exchange actually happens. First, here's a Flask app that has an authenticated endpoint that we'll be playing with throughout this blog. 
+
+```python
+from flask import Flask, jsonify, make_response, request
+from flask_cors import CORS
+import json
+
+SAMESITE = "None" # "None", "Lax", "Strict"
+SECURE = True
+HTTPONLY = False
+ACAC = "true" # "true" or "false"
+INSECURE_ORIGIN = True
+
+app = Flask(__name__)
+if INSECURE_ORIGIN:
+    cors = CORS(app, supports_credentials=True, origins=["https://transistor:5000", "http://attacker.local"])
+else:
+    cors = CORS(app, supports_credentials=True, origins=["https://transistor:5000"])
+app.config['CORS_HEADERS'] = 'Content-Type'
+
+
+# Simulated user credentials (Replace with a database lookup in real-world apps)
+USER_CREDENTIALS = {
+    "admin": "password123"
+}
+
+# Simple in-memory session store (for demonstration purposes)
+SESSIONS = {}
+
+@app.route("/")
+def home():
+    """Serve a basic web UI for easy demo."""
+    return """
+    <html>
+        <head>
+            <title>Vulnerable Log Viewer</title>
+            <script>
+                function login() {
+                    fetch('/login', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({username: 'admin', password: 'password123'})
+                    }).then(response => response.json())
+                      .then(data => {
+                          alert(data.message || data.error);
+                          document.getElementById('logSection').style.display = 'block';
+                      });
+                }
+            </script>
+        </head>
+        <body>
+            <h1>Vulnerable Log Viewer</h1>
+            <button onclick="login()">Login</button>
+        </body>
+    </html>
+    """
+
+@app.route("/login", methods=["POST"])
+def login():
+    """Authenticate user and set session cookie."""
+    data = request.get_json()
+    if not data or "username" not in data or "password" not in data:
+        return jsonify({"error": "Invalid request"}), 400
+
+    username = data["username"]
+    password = data["password"]
+
+    if USER_CREDENTIALS.get(username) == password:
+        # Generate a simple session token (in real apps, use secure tokens)
+        session_token = f"session-{username}"
+        SESSIONS[session_token] = username
+
+        # Set the session cookie
+        response = make_response(jsonify({"message": "Login successful"}))
+        response.set_cookie("session_token", session_token, httponly=HTTPONLY, secure=SECURE, max_age=999, samesite=SAMESITE)
+
+        return response
+
+    return jsonify({"error": "Invalid credentials"}), 401
+
+@app.route("/accountDetails", methods=["GET"])
+def get_data():
+    session_token = request.cookies.get("session_token")
+    origin = request.headers.get("Origin")
+    if session_token not in SESSIONS:
+        print(f"[!] Failed request from: {origin}")
+        return jsonify({"error": "Unauthorized"}), 403
+
+    response = jsonify({"apiKey": "insertflaghere"})
+    
+    if origin and INSECURE_ORIGIN:
+        print(f"[+] Successful request from: {origin}")
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        print(f"[+] Successful request from: None")
+
+    response.headers["Access-Control-Allow-Credentials"] = ACAC
+
+    return response
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", debug=False, ssl_context=("./cert.pem", "./key.pem"))
+```
+
+Suppose I, from `http://attacker.local`, attempt to make a request to `http://transistor:5000` and read the response. The current configuration, as a result of `cors = CORS(app)`, just lets any `Origin` come through. Viewing the HTTP request through Burp, we see this reflected in the headers:
+
+![Pasted_image_20250208211017.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250208211017.png)
+
+What if we need to specify some custom headers? We can run the JavaScript below on `attacker.local`, and see what happens in Burp. I've moved to using the [`fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) API since it's a better version of `XMLHttpRequest`.
+
+```js
+fetch('http://transistor:5000', {
+    method: 'GET',
+    headers: {
+        'X-Test-Header':'foobar'
+    }
+})
+.then(response => response.text())
+.then(data => console.log(data));
+```
+
+![Pasted_image_20250208211438.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250208211438.png)
+
+We see two requests now! The latter `GET` request isn't too different than before, but the former `OPTIONS` request is what we call the "[preflight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request)". Technically speaking, the primary purpose of a preflight request is to account for servers that [are not CORS-aware](https://stackoverflow.com/a/16945321), but it's a helpful way to understand the headers at play. Here, the server responds with `Access-Control-*` headers that define additional conditions for whether or not you're allowed to access the response. These response headers are listed in the Mozilla Developer documentation listed in the references, but the ones that come up most often are:
+
+- `Access-Control-Allow-Origin` - This one decides if you're allowed to do any of this in the first place and is a simple comparison to the `Origin` header in the request.
+- `Access-Control-Allow-Credentials` - A boolean value that can restrict access to the response of a request based on whether or not credentials are supplied (more on this later).
+- `Access-Control-Allow-Headers` - This one defines what additional headers can be provided in the request.
+- `Access-Control-Allow-Methods` - This header specifies what methods you're allowed to use to access the resource. This means you could configure a CORS policy where you could only POST to an endpoint, even if the actual endpoint on the domain supports both GET and POST.
+
+The reason we got this preflight request was because our request was a little more complicated than a simple GET request. However, the rules defined by the response headers apply regardless of if we have this preflight request or not. 
+
+And with that, we've summed up most of what CORS is. There are additional caveats with how it works, but I don't want to steal more work from [Portswigger](https://portswigger.net/research/exploiting-cors-misconfigurations-for-bitcoins-and-bounties) and Mozilla, so I recommend checking out those references for some additional information.
+
+## CSRF and XSS
+### The Vulnerabilities
+**Cross-site request forgery** (CSRF) is a vulnerability that allows an attacker to induce a user's browser to take actions that the user did not intend to. This vulnerability is easy to conflate with **cross-site scripting** (XSS), injecting arbitrary JavaScript in a victim's browser, something we've talked about on this blog [many](https://notateamserver.xyz/blog/htb-bookworm/) [times](https://notateamserver.xyz/blog/htb-santa-toy-workshop/) [before](https://notateamserver.xyz/blog/nahamcon-hacker-ts/). There's certainly some overlap there, as you can leverage an XSS vulnerability to induce the browser to take unintended actions. 
+
+Like many things in security, the lines are a bit fuzzy. But, if we consider the simplest case of CSRF (external site making request to target site) and the simplest case of XSS (stored XSS on the site we're targeting), a key difference is that CSRF will not necessarily let you read the response of your request. A common payload format for CSRF vulnerabilities is to design a HTML form that automatically submits itself. This can be hosted on an attacker's server which can be used for phishing.
+
+```html
+<!-- Credit to https://portswigger.net/web-security/csrf -->
+<html>
+    <body>
+        <form action="https://vulnerable-website.com/email/change" method="POST">
+            <input type="hidden" name="email" value="pwned@evil-user.net" />
+        </form>
+        <script>
+            document.forms[0].submit();
+        </script>
+    </body>
+</html>
+```
+
+On the other hand, when you have XSS, you've injected code into the website you're attacking, and can leverage functions like `fetch()` to make requests, read responses, and exfiltrate data from the website you've attacked, but the browser thinks your injected JavaScript and the site's JavaScript are one and the same. <sub>(we'll talk about CSP in a minute hold on)</sub>
+
+What can make CSRF harder to understand and differentiate are the base requirements. For one, all of the values in a request need to be predictable, because, in a way, the request you build up in a payload is static, and you don't get to see what the target web page looks like before or after you send it. The other assumption has to do with session handling, since we assume a victim is authenticated before the attack happens. After all, why does an HTML form on one website suddenly decide to attach my credentials to a cross-site request?
+
+### A "Brief" Detour: Cookies and SameSite
+The answer is cookies! Simply put, cookies are tied to domains, meaning whether the request is made from your browser or `http://attacker.com`, if the cookie matches the domain, it gets sent by the browser.
+
+That is, unless the [`SameSite`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes) attribute is set. If you go into your dev tools, you'll notice that a cookie is more than just a string that's sent with your requests- some flags are there as well.
+
+![Pasted_image_20250209112121.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250209112121.png)
+
+The `Secure` flag, if true, means the cookie can only be sent over HTTPS, and the `HttpOnly` flag means you cannot access the cookie through client-side JavaScript. The `SameSite` flag has a bit more to it though:
+
+- If `SameSite=Strict`, the browser only sends the cookie for same-site requests, meaning even with a permissive CORS policy, we can't make cross-site requests with cookies.
+- If `SameSite=Lax`, the cookie is still not sent on cross-site requests. However, if a user is going to the origin from an external site (think following a redirect), the cookie is sent.
+- If `SameSite=None`, the browser will just send the cookie anyway, regardless of cross-site or same-site. Note that this can only be set if `Secure` is true, because otherwise it would be really bad.
+
+Much like CORS though, this security configuration takes effect at the browser level. But speaking of CORS, how do these two concepts interact? Let's return to our demo application and run a couple of tests.
+
+Starting with a trusted origin and `Access-Control-Allow-Credentials: true`, we'll try each of the `SameSite` settings. We'll then use the same `fetch()`-based JavaScript payload to make a request to `https://transistor:5000/accountDetails`.
+
+#### SameSite=None
+
+As expected, since `SameSite` is None, and `attacker.local` is a trusted origin, we're able to make a request to the endpoint and retrieve the response.
+
+![Pasted_image_20250209191536.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250209191536.png)
+
+In Burp, we see a single successful request with the response:
+
+```http
+GET /accountDetails HTTP/1.1
+Host: transistor:5000
+Cookie: session_token=session-admin
+Sec-Ch-Ua: "Not;A=Brand";v="24", "Chromium";v="128"
+Accept-Language: en-US,en;q=0.9
+Sec-Ch-Ua-Mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.120 Safari/537.36
+Sec-Ch-Ua-Platform: "Linux"
+Accept: */*
+Origin: http://attacker.local
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://attacker.local/
+Accept-Encoding: gzip, deflate, br
+Priority: u=1, i
+Connection: keep-alive
+
+HTTP/1.1 200 OK
+Server: Werkzeug/3.0.4 Python/3.12.6
+Date: Mon, 10 Feb 2025 01:11:37 GMT
+Content-Type: application/json
+Content-Length: 28
+Access-Control-Allow-Origin: http://attacker.local
+Access-Control-Allow-Credentials: true
+Vary: Origin
+Connection: close
+
+{"apiKey":"insertflaghere"}
+```
+
+We should also note that `HttpOnly` has no effect on this behavior, despite the fact that we're using JavaScript from the console to demonstrate these requests. Recall that `HttpOnly` is designed to stop JavaScript from reading the cookie, but it can still issue requests that include the cookie without needing to touch it.
+#### SameSite=Lax and SameSite=Strict
+
+This is where things get a little more interesting. If I try the exact same payload as before, I get a 403 Forbidden response.
+
+![Pasted_image_20250209192641.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250209192641.png)
+
+I can still read the response, but the cookie was not sent. This is reinforced by what we see in Burp:
+
+```http
+GET /accountDetails HTTP/1.1
+Host: transistor:5000
+Sec-Ch-Ua: "Not;A=Brand";v="24", "Chromium";v="128"
+Accept-Language: en-US,en;q=0.9
+Sec-Ch-Ua-Mobile: ?0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.120 Safari/537.36
+Sec-Ch-Ua-Platform: "Linux"
+Accept: */*
+Origin: http://attacker.local
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: http://attacker.local/
+Accept-Encoding: gzip, deflate, br
+Priority: u=1, i
+Connection: keep-alive
+
+HTTP/1.1 403 FORBIDDEN
+Server: Werkzeug/3.0.4 Python/3.12.6
+Date: Mon, 10 Feb 2025 01:25:36 GMT
+Content-Type: application/json
+Content-Length: 25
+Access-Control-Allow-Origin: http://attacker.local
+Access-Control-Allow-Credentials: true
+Vary: Origin
+Connection: close
+
+{"error":"Unauthorized"}
+```
+
+Clearly, we haven't stopped the different origin from reading the response, but the response says we're "Unauthorized", so what gives?
+
+The `SameSite=Lax` setting prevents cross-site requests from including cookies, so since our request to `/accountDetails` did not have the `session_cookie`, it returned a 403. The reason we're able to read the response is because the `Access-Control-Allow-Origin` header reflects the requesting origin. Although that CORS policy is not best security practice, we can't abuse it here because of the `SameSite` requirements.
+
+An interesting caveat here is that `Lax` still allows the cookie to be used when following links or redirects (i.e. top-level navigation), so clicking a button or anchor tag that redirects us does end up sending the cookie with the request.
+
+```html
+<a href="https://transistor:5000/accountDetails">Get accountDetails</a>
+
+<input type="button" value="Also GET /accountDetails" onclick="document.location='https://transistor:5000/accountDetails';">
+```
+
+If `Lax` does not let us send the cookie cross-site, then we wouldn't expect the `Strict` setting to be any looser, and it isn't. When we try and run the `fetch()` code from the `attacker.local` domain, we get the same result as the previous example. That said, when we try to click the anchor tag or button that we showed in the previous example, that also does not transmit the cookie.
+
+#### Access-Control-Allow-Credentials
+So if you've followed along so far, we see that the permissive CORS policy has been letting us read the responses from our requests, and the `SameSite` flag decides whether or not our cookie can be transmitted. What's the point of the `Access-Control-Allow-Credentials` header then?
+
+Let's do one more example, with the following setup:
+- `HttpOnly` and `Secure` will be enabled because we've shown that they don't impact what we're explaining here.
+- `SameSite` will be set to `None` so the cookie can be transmitted cross-site.
+- `Access-Control-Allow-Origin` will reflect the requesting Origin, because we won't be able to read the response otherwise.
+- `Access-Control-Allow-Credentials` will be set to `false`, which we have not tried yet.
+
+When we run the JavaScript from before, we get an entirely new error.
+
+![Pasted_image_20250816152106.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250816152106.png)
+
+Looking at Burp, the request contains the cookie and returns a 200 OK, but the CORS policy has `Access-Control-Allow-Credentials: false`.
+
+![Pasted_image_20250816152329.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250816152329.png)
+
+The behavior we're observing becomes clearer if we choose to omit the cookie from our request. When we set `credentials: 'omit'` in the call to `fetch()`, we **are** able to read the response.
+
+![Pasted_image_20250816152524.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250816152524.png)
+
+In the first example, we sent an authenticated request, but were not allowed to read the response containing the API key. In the second example, we told `fetch()` not to send the cookie in the request, leading to an unauthenticated request, but we were able to read the response without errors.
+
+If you carefully read the error message from the first example, it gets to the crux of the issue:
+
+> The value of the 'Access-Control-Allow-Credentials' header in the response is 'false' which must be 'true' when the request's credentials mode is 'include'.
+
+In essence, both the client (`fetch()`, `XMLHttpRequest`, `EventSource()`) and the server (`Access-Control-Allow-Credentials`) have to consent to allowing the credentials being sent in order for the browser to allow the response to be readable. If we intentionally omit the credentials, the header doesn't matter, but if we say we're including credentials, the `Access-Control-Allow-Credentials` header *must* be `true`.
+
+### The Defenses
+The reason for such a long detour is because it's common for people, including myself, to mix up what does and doesn't prevent CSRF and XSS. Let's talk about those common defenses.
+
+#### SameSite Cookies
+We just talked about these! By ensuring your sensitive cookies are either `Lax` or `Strict`, you can prevent the browser from sending them with unintentional cross-site requests. This prevents CSRF attacks that depend on transmitting cookies with forms or JavaScript-based requests. On the other hand, this does not stop XSS attacks, as SameSite focuses on requests originating from other sites, not requests going from the same site to a different origin.
+
+<Callout title="Sites vs Origins and the Domain Attribute" variant="important">
+Ok, ok, I may have left out some important details on the difference between "sites" and "origins", which is relevant when discussing when CORS is and isn't secure. I also skipped over the `Domain` attribute as another relevant cookie setting, which is semi-related to that discussion. For the time being, I've left it out in the interest of simplicity and keeping this post a little more focused. That said, if you are interested in learning more, here are some resources:
+
+- [PortSwigger: Bypassing SameSite cookie restrictions](https://portswigger.net/web-security/csrf/bypassing-samesite-restrictions)
+- [MDN: Using HTTP Cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#define_where_cookies_are_sent)
+</Callout>
+#### HttpOnly Cookies
+As mentioned earlier, `HttpOnly` prevents client-side JavaScript from directly working with cookies. This significantly reduces the potential impact of XSS attacks, but is an incomplete defense on its own. While `HttpOnly` prevents attackers from stealing cookies, it does not prevent the root cause of JavaScript being injected in a victim's session. In fact, there's a lot of things you can do with XSS without stealing a cookie!
+
+- [Deface a page](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection#ui-redressing) by changing the HTML content. You could show off your cool hacker calling card, or you could make a fake login page to get victims to send you their credentials.
+- [Start a keylogger](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection#javascript-keylogger) and exfiltrate a victim's key presses back to an attacker controlled domain.
+- [Scan a victim's internal network](http://www.gnucitizen.org/blog/javascript-port-scanner/) for open ports/services.
+
+There are plenty more ideas here: http://www.xss-payloads.com/payloads-list.html?a#category=all
+
+`HttpOnly` does not stop CSRF attacks either, unfortunately. Although we've shown CSRF examples using JavaScript and HTML, none of our examples try to interact with a cookie directly, so the browser protection does not apply. Despite `HttpOnly`'s shortcomings, it's still an effective measure for defense-in-depth.
+
+#### CSRF/XSRF Tokens
+The concept here is simple. To prevent attackers forging request data originating from a different site, have your web application store a random, unpredictable token that gets submitted with important forms. If the server doesn't get that token in a request, the app should block the request from being processed.
+
+The reason this works is because if an attacker wants to run a CSRF attack against a victim, they'd have to know what the CSRF token is ahead of time. Unless there was some kind of way to leak a user's CSRF token, there is no way to forge cross-site requests. Though, for that reason, CSRF tokens do not prevent XSS attacks. Since the token needs to be shared with the client (i.e. browser) in some way, an attacker can leverage their XSS injection to pull the token from wherever the app stores it to add it in future requests.
+
+#### Content Security Policy (CSP)
+[Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) is an HTTP response header that controls what JavaScript resources a document is allowed to load. A comprehensive discussion on CSP and how certain configurations can lead to bypasses would probably be a whole blog on its own, but we can cover the basics here.
+
+Unlike CORS, CSP is a single header that lists a number of *directives* (separated by semi-colons) to control what is considered "trustworthy" JavaScript. Here's an example:
+
+```http
+Content-Security-Policy: default-src 'self'; script-src 'self' example.com
+```
+
+In this case, `default-src` and `script-src` are directives that define parts of the policy (find a full list [here](https://content-security-policy.com/)). When `default-src` is set to `self`, the server is telling the browser to only load resources that are from the same origin. The `script-src` adds to this, saying script files can be loaded from the same origin and `example.com`. 
+
+Suppose an attacker submits the following payload in an XSS attack against a site using the CSP shown above:
+```html
+<script src="https://attacker.local/poc.js"></script>
+```
+
+Since CSP blocks inline scripts unless you specify the `unsafe-inline` directive, this attack just wouldn't work! Of course, validating user-controllable data and sanitizing inputs is the best way to prevent XSS, but a good CSP can catch anything that falls through the cracks.
+
+#### CORS
+CORS is simply a relaxation of the same-origin policy. CORS doesn't prevent CSRF or XSS, which might still be confusing. Since it's unrelated to JavaScript execution, let's push XSS to the side and just think about CSRF.
+
+When we were testing how `fetch()`, `SameSite`, and `Access-Control-Allow-Credentials` all interacted with each other, notice that the requests and responses were always logged in BurpSuite. Whether or not we were able to read the response was up to CORS, but CORS does not stop the GET requests from being processed at all. Even if a web app has a secure CORS configuration, it's still possible to have a CSRF if cookies are not secured or the app does not use sufficiently random tokens.
+
+The misconception is most prevalent when we move away from GET requests and start using other verbs or custom headers. These are considered "non-simple" requests, and we briefly mentioned these when talking about preflight requests. In those cases, if those headers or verbs are not listed in the `Access-Control-Allow-*` headers, then the request **is blocked**, and the server never processes it. As a result, CORS might inadvertently stop some CSRF attacks, but it is not a complete solution.
+
+## The Point of this Blog
+This brings me to the main event, and hopefully ties most of these concepts together:
+
+<Callout title="The Situation" variant="conjecture">
+Suppose an app, `http://transistor:5000`, has an insecure CORS policy where I can serve a phishing page from `attacker.local` to abuse that configuration. Assume that the authentication cookies are `SameSite=None`.
+
+If `http://transitor:5000` has an authenticated GraphQL endpoint that doesn't have CSRF defenses, and you're able to serve JavaScript from `attacker.local` that makes a POST request and reads the response from the GraphQL API, is this a CSRF or CORS issue?
+</Callout>
+
+This situation was the entire motivation for this blog, and now that we've explored how all of these pieces move together, the explanation should be fairly simple.
+
+In most cases I've seen people discuss CSRF against GraphQL, I find it to be somewhat contrived. PortSwigger has [a lab](https://portswigger.net/web-security/graphql/lab-graphql-csrf-via-graphql-api) on it, but it's only possible because the GraphQL endpoint accepts POST data as `x-www-form-urlencoded`. Most GraphQL implementations these days only support `application/json` by default, which, quote Portswigger:
+
+> POST requests that use a content type of `application/json` are secure against forgery as long as the content type is validated. In this case, an attacker wouldn't be able to make the victim's browser send this request even if the victim were to visit a malicious site. [source](https://portswigger.net/web-security/graphql)
+
+Since an HTML form's method is limited to GET and POST, and you can't submit `Content-Type: application/json` through a form, we can only try doing CSRF through a `fetch()` or `XmlHttpRequest`. However, in 90% of cases, CORS will stop that request from happening, seeing the "non-simple" POST request and how it isn't in the configuration. But what about that 10%?
+
+To paint a better picture of what I encountered, if I set my `Origin` to a malicious domain, I would get the following headers in the response to my POST request:
+
+```http
+HTTP/1.1 200 OK
+...
+Access-Control-Allow-Origin: https://attacker.local
+Access-Control-Allow-Credentials: true
+...
+```
+
+This is obviously insecure, but the preflight `OPTIONS` request was surprisingly, populated?
+
+```http
+HTTP/1.1 200 OK
+...
+Access-Control-Allow-Origin: https://attacker.local
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Methods: GET,PUT,POST,HEAD,DELETE
+Access-Control-Allow-Headers: authorization,content-type,x-api-key,cache-control,content-language,content-length,expires,last-modified,pragma,...
+...
+```
+
+It is not normal for applications to allow any method or any header to be submitted in a cross-origin request, making this seem worth digging into. The keen-eyed will notice the `content-type` header being allowed in the `Access-Control-Allow-Headers` header, meaning cross-origin requests would allow us to set the `content-type` to whatever we want while still satisfying CORS.
+
+What's especially interesting about this edge case is that it effectively bypasses something that many GraphQL implementations take for granted. Apollo GraphQL, for instance, in their security documentation, says that their [CSRF prevention](https://www.apollographql.com/docs/graphos/routing/security/csrf#enable-csrf-prevention) prevents `text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data` by default, but makes no mention of CSRF tokens.
+
+So now we've noticed three big security flaws here:
+- The API does not use CSRF tokens
+- The CORS configuration lets me set basically any header I want
+- The cookies are `SameSite=None`
+
+I've created a minimal working example of the endpoint that I targeted. Even though it's not GraphQL, the important part is that it exclusively uses JSON.
+
+```python
+@app.route("/logs", methods=["POST"])
+def post_data():
+    # authenticate user cookie
+    session_token = request.cookies.get("session_token")
+    if session_token not in SESSIONS:
+        return jsonify({"error": "Unauthorized"}), 403
+    # ensure proper API key was sent with request
+    if request.headers.get("X-Api-Key") is None or request.headers["X-Api-Key"] != "insertflaghere":
+        return jsonify({"error": "Missing API Key"}), 403        
+
+    # Require JSON body
+    data = json.loads(request.get_json())
+
+    if not data or "log_date" not in data:
+        return jsonify({"error": "Invalid request, 'log_date' required"}), 400
+    # retrieve logs
+    log_date = data["log_date"]
+    logs = {
+        "02082025": "User login: nayyyr from IP 10.12.53.189.",
+        "02072025": "User login: john from IP 100.1.64.127.",
+        "02062025": "User login: example from IP 90.84.34.66."
+    }
+
+    response = jsonify({"logs": logs.get(log_date.lower(), "No logs available for this level.")})
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    origin = request.headers.get("Origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+
+    return response
+```
+
+Then, we can use the JavaScript below to make a cross-site POST request to our JSON API:
+
+```js
+fetch('https://transistor:5000/logs', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+	    'X-Api-Key': 'insertflaghere',
+	    'Content-Type':'application/json'
+	},
+    body: JSON.stringify('{"log_date":"02082025"}')
+})
+.then(response => response.text())
+.then(data => console.log(data));
+```
+
+![Pasted_image_20250816192720.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250816192720.png)
+
+And it works! If we look at the preflight request, we can see the CORS configuration and how this "complex" request was allowed:
+
+![Pasted_image_20250816192909.png](https://an00brektn.github.io/img/cors-xss-csrf/Pasted%20image%2020250816192909.png)
+
+In the case of GraphQL, it wouldn't have mattered if the data we were submitting was a mutation or a query or whatever else, the core of this issue is that an insecure CORS configuration enabled a CSRF attack to happen in the first place.
+
+<Callout title="flask-cors Specific-Behavior" variant="remark">
+Interestingly, while putting this example together, this was how I configured CORS. I did end up manually overriding the ACAO and ACAC headers just to ensure that the browser would behave the way that it did, but nowhere in the code did I specify all of those methods or headers.
+
+```python
+from flask_cors import CORS
+cors = CORS(app, supports_credentials=True, origins=["https://transistor:5000", "http://attacker.local"])
+app.config['CORS_HEADERS'] = 'Content-Type'
+```
+</Callout>
+
+## Conclusion
+So was it a CSRF issue of a CORS issue? In this case, it's really both. Without the CORS configuration, we wouldn't have been able to send the POST request. On the other hand, the absence of SameSite protections and CSRF tokens means we were able to have CSRF in the first place! I ended up reporting this as both, and I think it's a good lesson in not getting caught up in semantics and instead focusing on the mechanics of what you have to work with.
+
+All in all, the web is messed up and weird. Seriously.
+
+I've been reading [The Tangled Web](https://nostarch.com/tangledweb) recently, which is a book from 2011 on all sorts of fundamental parsing quirks and blurry security boundaries on HTTP and the web, and even though the book came out before HTTP/2 did, it's interesting how everything is really duct-taped together at the end of the day. I have no clue what a "secure-by-default" web would look like, if that's even possible, but as security professionals and hackers, it's our job to thrive in the weird and obscure. While these web controls are not unknown, it was a challenge to be accurate with my words while writing this blog, taking into account all of the different possibilities.
+
+## References
+- [Portswigger: What is CORS?](https://portswigger.net/web-security/cors)
+- [Mozilla Web Docs: CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
+- [Mozilla Web Docs: Origin Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Origin)
+- [PortSwigger: What is CSRF?](https://portswigger.net/web-security/csrf)
+- [StackOverflow](https://stackoverflow.com/questions/24687313/what-exactly-does-the-access-control-allow-credentials-header-do)
+- [content-security-policy.com](content-security-policy.com)
+- [http.dev: Cookies](https://http.dev/cookies)
