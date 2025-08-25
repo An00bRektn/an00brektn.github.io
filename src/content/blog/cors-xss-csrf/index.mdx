@@ -206,9 +206,17 @@ That is, unless the [`SameSite`](https://developer.mozilla.org/en-US/docs/Web/HT
 
 The `Secure` flag, if true, means the cookie can only be sent over HTTPS, and the `HttpOnly` flag means you cannot access the cookie through client-side JavaScript. The `SameSite` flag has a bit more to it though:
 
-- If `SameSite=Strict`, the browser only sends the cookie for same-site requests, meaning even with a permissive CORS policy, we can't make cross-site requests with cookies.
+- If `SameSite=Strict`, the browser will not send the cookie on cross-site requests.
 - If `SameSite=Lax`, the cookie is still not sent on cross-site requests. However, if a user is going to the origin from an external site (think following a redirect), the cookie is sent.
 - If `SameSite=None`, the browser will just send the cookie anyway, regardless of cross-site or same-site. Note that this can only be set if `Secure` is true, because otherwise it would be really bad.
+
+<Callout title="Sites vs Origins and the Domain Attribute" variant="important">
+Ok, ok, I am leaving out some important details on the difference between "sites" and "origins", which is relevant when discussing when CORS is and isn't secure. Breaking down how some requests can be *cross-origin* but *same-site* can get a little confusing at this point, so for now, I've left it out in the interest of simplicity and keeping this post a little more focused. That said, if you are interested in learning more, here are some resources (thank you [jub0bs](https://bsky.app/profile/jub0bs.com/post/3lx2o4l7y3223) for the nitpick):
+
+- [PortSwigger: Bypassing SameSite cookie restrictions](https://portswigger.net/web-security/csrf/bypassing-samesite-restrictions)
+- [MDN: Using HTTP Cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#define_where_cookies_are_sent)
+- [jub0bs: The Great SameSite Confusion](https://jub0bs.com/posts/2021-01-29-great-samesite-confusion/)
+</Callout>
 
 Much like CORS though, this security configuration takes effect at the browser level. But speaking of CORS, how do these two concepts interact? Let's return to our demo application and run a couple of tests.
 
@@ -343,12 +351,6 @@ The reason for such a long detour is because it's common for people, including m
 #### SameSite Cookies
 We just talked about these! By ensuring your sensitive cookies are either `Lax` or `Strict`, you can prevent the browser from sending them with unintentional cross-site requests. This prevents CSRF attacks that depend on transmitting cookies with forms or JavaScript-based requests. On the other hand, this does not stop XSS attacks, as SameSite focuses on requests originating from other sites, not requests going from the same site to a different origin.
 
-<Callout title="Sites vs Origins and the Domain Attribute" variant="important">
-Ok, ok, I may have left out some important details on the difference between "sites" and "origins", which is relevant when discussing when CORS is and isn't secure. I also skipped over the `Domain` attribute as another relevant cookie setting, which is semi-related to that discussion. For the time being, I've left it out in the interest of simplicity and keeping this post a little more focused. That said, if you are interested in learning more, here are some resources:
-
-- [PortSwigger: Bypassing SameSite cookie restrictions](https://portswigger.net/web-security/csrf/bypassing-samesite-restrictions)
-- [MDN: Using HTTP Cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies#define_where_cookies_are_sent)
-</Callout>
 #### HttpOnly Cookies
 As mentioned earlier, `HttpOnly` prevents client-side JavaScript from directly working with cookies. This significantly reduces the potential impact of XSS attacks, but is an incomplete defense on its own. While `HttpOnly` prevents attackers from stealing cookies, it does not prevent the root cause of JavaScript being injected in a victim's session. In fact, there's a lot of things you can do with XSS without stealing a cookie!
 
