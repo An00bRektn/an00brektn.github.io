@@ -32,12 +32,12 @@ The first option is definitely not practical as time goes on. I'm sure many of u
 
 Docker's architecture functions very similarly to the latter example involving VMs. Suppose I set up some VMs running their own applications on my server.
 
-<img src="https://www.docker.com/wp-content/uploads/2021/11/container-vm-whatcontainer_2.png.webp" style="width:80%;height:80%"></img>
+<img src="https://www.docker.com/wp-content/uploads/2021/11/container-vm-whatcontainer_2.png.webp"></img>
 <sup>Source: [Docker](https://www.docker.com/resources/what-container/)</sup>
 
 Here, we have a server running some kind of hypervisor, like VirtualBox or VMware, and it is running three different virtual machines. Each VM is running an entire operating system and virtualizing hardware along with whatever applications it needs. This setup is fine if you're trying to set up some kind of lab or development environment, because you usually want to run each machine like it's its own computer, but if we're only using VMs to containerize our applications, (1) it takes a lot of space and (2) it takes more computational resources.
 
-<img src="https://www.docker.com/wp-content/uploads/2021/11/docker-containerized-appliction-blue-border_2.png.webp" style="width:80%;height:80%"></img>
+<img src="https://www.docker.com/wp-content/uploads/2021/11/docker-containerized-appliction-blue-border_2.png.webp"></img>
 
 Above is a diagram of how Docker works, and it looks very similar to the VM setup. However, in lieu of a hypervisor, we're using the Docker engine to communicate with the host operating system, and on top of that, each application is running in its own environment, without an entire operating system behind it. I'll lightly touch on the internals of Docker in the next section, but TL;DR, these containers are running with a shared OS kernel, but as isolated processes in the user space. Since the only dependency for running a Docker container is the Docker engine, all someone has to do to run your application is have the Docker engine installed, and then issue the relevant command to load up the application.
 
