@@ -1,0 +1,148 @@
+---
+authors:
+  - an00b
+date: 2026-04-13
+description: zero to hero? more like zero to 0.1, i just push buttons to make funny things happen.
+image: /public/static/frontmatter/kiosk-hacking-frontmatter.png
+tags:
+  - kiosk
+  - info
+  - web
+  - hardware
+  - iot
+  - threat-model
+title: How to Hack a Restaurant (and other unconventional attack surfaces)
+---
+import Callout from '@/components/Callout.astro'
+import { Icon } from 'astro-icon/components'
+
+## Intro
+One of my favorite parts of pentesting is being able to see many environments in a short span of time. I've gotten the chance to test applications from Fortune 500 companies whose security practices are rock solid, and I've also gotten to see smaller businesses who have only just become mature enough to consider pentesting. That said, even with that variety, when I see a web/mobile/desktop application, there's a consistent methodology that I can apply to find where the gaps might lie. Network assessments are even more straightforward, where I can run a series of network segmentation scans, check Active Directory, and immediately draw conclusions.
+
+Recently, I had an extremely interesting task put in front of me: **how do you hack a restaurant?**
+
+To be clear, this wasn't a physical test where I'd have to break into a building (pretty sure I would get shot if I did a test like that as a not-white person in the US), rather, the goal was to see what was possible if someone walked into the building and tried to mess with the computers. Although the exercise felt overwhelming at first, I can safely say that *there's a lot* you can do, but planning was extremely important. Having worked through the exercise, the point of this blog is to share my process and break down how to think about security in terms broader than just "injection attacks" or "coerced authentication".
+
+> **VERY BIG IMPORTANT LEGAL NOTE FOR LEGAL REASONS**: Do not hack things you do not have permission to, there are so many laws out there that people could invoke to get you real jail time. This blog intends to discuss this topic at a high-level by citing already public techniques that apply to the field in general as opposed to step by step instructions for a single device. This is solely for the sake of deepening the reader's understanding of computer security at a broader scale, no part of this blog is a formal endorsement or call to action to perform unauthorized, illegal activities. <sub><i>please don't sue me man i just think hacking things other than apps and networks is cool</i></sub>
+
+## Threat Modeling is More Than Just Résumé Filler
+
+![xkcd](https://an00brektn.github.io/img/restaurant-hacking/Pasted%20image%2020260413125155.png)
+
+
+As someone who comes from a CTF/competitive background, the concept of "threat modeling" used to just sound like bureaucracy that you had to do because policy said so. However, it's really something that every good security practitioner is doing when they're looking at an environment, on either attack or defense. 
+
+<Callout title="Threat Model" variant="definition">
+According to OWASP, "A threat model is a structured representation of all the information that affects the security of an application. In essence, it is a view of the application and its environment through the lens of security."
+</Callout>
+
+The most common acronyms you'll hear along with threat modeling are [PASTA](https://cdn2.hubspot.net/hubfs/4598121/Content%20PDFs/VerSprite-PASTA-Threat-Modeling-Process-for-Attack-Simulation-Threat-Analysis.pdf) and [STRIDE](https://learn.microsoft.com/en-us/previous-versions/commerce-server/ee823878(v=cs.20)?redirectedfrom=MSDN), which represent two of many ways to document the what risks are relevant to a particular system. I could explain how each of these work, but quite frankly, I don't love either model? STRIDE tries to focus on the end goals (Spoofing Identity, Tampering With Data, Repudiation, Information Disclosure, Denial of Service, Escalation of Privilege), but it doesn't do a good job describing the attack surface itself, nor does it really give people a way to prioritize what's most important to the system. PASTA is slightly better since it tries to think about attack paths starting from attacker objectives, however, I think having four stages called "Analysis of [vulnerability/risk/weaknesses]" is cumbersome.
+
+While different techniques might be more relevant to certain stakeholders than others, from an attacker's perspective, I think the following approach generally makes the most sense. At the very least, it's [what I've been using](https://youtu.be/1_WNPdY1IiY?t=253):
+
+1. **User Roles/Threat Actors**: Identify what security-relevant privileges an attacker can assume. This is less about APTs vs script kiddies, instead, what level of access would a malicious actor have. An internal application might only be worried about malicious insiders, but a full corporate security environment would need to account for both unauthenticated, external attackers and inside attackers. 
+2. **Attack Surface**: Identify all components and features directly accessible to an attacker. In the case of a web application, what endpoints and domains are accessible? For a desktop application, is it just a self-contained application, or does it hook up to a remote database or API?
+3. **Critical Assets**: What are the essential components of the system (aka "crown jewels")? Maybe it's as simple as a database that has all of the customer PII and financial data. Maybe it's a little more abstract like the organization's brand and reputation.
+4. **Attacker Goals**: This explicitly describes what an attacker wants out of the critical assets. In the case of a database, depending on the business use case, leaking data, modifying data, or making data inaccessible can have very different impacts (e.g. e-commerce data versus data used by a medical service).
+
+While the attack surface and user roles may vary based on the scope of your system (e.g. Do we include cloud in our application assessment? Do we include CI/CD in our internal/external assessment?), what I like about this approach is that the next steps follow naturally. Once you know what's being attacked and who's attacking it, it's relatively easy to begin to unpack what various threat actors might be going for. From there, you can include an optional 5th step where you think about very specific types of attacks. For instance, for a medical application, the impact of denial of service attacks is a much higher priority to address than denial of service against a random single-page application. Of course, denial of service is relevant to any system that has specific uptime requirements, but when we only have finite time as testers and more generally, security practitioners, we need to focus on the highest impact stuff first.
+
+Whether you choose to write a formal threat model is up to you, however, taking the time to think and develop a rough mental model is almost always valuable for any kind of assessment. Not only does it help to contextualize what testing you're doing, but when it comes to reporting, you can come back to it when trying to justify the severity of certain findings. Let's walkthrough a ***fictional*** example that represents an average fast food restaurant.
+
+> **ANOTHER VERY BIG IMPORTANT LEGAL NOTE FOR LEGAL REASONS**: Any references to an "assessment", "engagement", "project", or "test" of a restaurant environment refer to an entirely hypothetical penetration test. The circumstances described about the assessment is entirely a work of fiction loosely inspired by the author's experience. The names, characters, incidents, computers, and vulnerabilities portrayed in it are the work of the author’s imagination. Any resemblance to actual persons, living or dead, events or localities is entirely coincidental. <sub><i>again, please don't sue me man i just think hacking things other than apps and networks is cool</i></sub>
+
+**User Roles**:
+- **Restaurant Customer**: The most obvious user attacking a restaurant would be any random customer that walks in. It would be highly suspicious, but not impossible, for them to touch anything on or behind the counter, but they could easily sit in the corner of the restaurant and attack the Wi-Fi or any lesser-surveilled devices.
+- **Malicious Employee**: An employee could easily be paid off or persuaded to use their insider access to plant malware in the environment. While they wouldn't have the administrative access that the manager has, they could likely stay after hours to do some more physical tampering with computers or spend more time trying to break into devices behind the counter.
+- **Malicious Manager**: This is a similar scenario to the malicious employee, except we can assume that the manager has administrative access to most devices and could easily get away with physically connecting to a switch. The odds that a manager is "compromised" is the least likely situation, but it's worth considering this position to get a better sense of the "blast radius" of any attacks they try.
+
+**Attack Surface:**
+- **Wi-Fi Networks**: Our restaurant will specifically have two distinct categories of Wi-Fi networks: (1) guest Wi-Fi that anyone should be able to access and (2) an internal Wi-Fi network for any employee devices and mobile restaurant devices. While traditional wireless attacks against the guest Wi-Fi are relevant, it is more impactful for us to think about network segmentation between the guest Wi-Fi and the rest of the restaurant.
+- **Self-Serve Kiosk**: For the purposes of having our restaurant customer do more than just attack Wi-Fi, we'll say this restaurant has a self-service kiosk that is expected to be used by customers. Full disassembly by a customer would obviously be suspicious, but I'm sure we've all seen [shenanigans](https://www.youtube.com/watch?v=pZkpH3XV3h0) with kiosks anywhere, so we'd be concerned about breakouts and such. 
+- **Point of Sale Devices**: These devices are operated by employees to submit orders and accept payment. As a result, it would be *extremely* unlikely that a random customer is able to plug a full USB in and try and run some sort of [ducky script](https://github.com/hak5/usbrubberducky-payloads), but an employee could easily try and get shell access to whatever operating system is running under the hood. Although an employee could easily just put in whatever orders they wanted, it's not really a risk we consider here because that's just the intended level of access an employee or manager should have.
+- **Misc. Computers**: The name might not be specific, but this is sort of a catch-all category for any computers that employees/managers may or may not interact with, but are out of the hands of the typical customer. This could theoretically be the menu boards, whatever displays are telling the kitchen what orders are in queue, even computer running the drive thru. If I wanted to be topical, we could include some AI elements if there was an LLM running the drive thru, but it's not as common yet and would lead us to another tangent about prompt injection that I don't want to cover at this time.
+- **Direct Ethernet Access**: This is one of the most privileged points that we could have since the switch/router likely sits in the back and is only accessible by trusted employees/managers, but it is worth taking into account from a segmentation perspective. 
+- **External Web Services**: This one might sound odd if you're thinking about what physically exists in a restaurant, but back in September of last year, [Bobdahacker](https://archive.is/zIteR) disclosed an authentication bypass in a SaaS product used by multiple big fast food chains that allowed them to get remote access to a bunch of drive thru data, among other things. A system is only as strong as its weakest link, so if there's a random cloud service that has everyone's credit card info or something else silly, we should look for that.
+
+**Critical Assets**:
+- **Service Availability**: At the end of the day, a restaurant has to do one thing: serve food. If you can't serve food, you can't do business, which is bad. Could someone run in to the restaurant and sledgehammer a kiosk? Sure, but that's not really something in our control. If someone could get remote access to devices and shut down the internet, that would be a scenario we could address.
+- **Order Integrity**: In a slightly different category from Service Availability, it's also important that the orders themselves are correct, whether that means tampering with existing orders or forging new ones without paying for them.
+- **Customer Data**: It would be really bad if you could get access to financial data or PII. Kind of self-explanatory.
+- **Brand/Reputation**: It's true that you can say reputation is important for any company, it's especially important for businesses that are customer facing. It's been 13 years since Target had that whole [data breach](https://www.commerce.senate.gov/wp-content/uploads/media/doc/2014%200325%20Target%20Kill%20Chain%20Analysis.pdf), and I still remember hearing about that on the news. Now, that fact hasn't really changed my shopping habits, but perception is everything and it could easily take over a year to clean up damage from one bad publicity stunt.
+
+**Terminal Goals**:
+- **Shut Down the Orders**: Malware is bad, but realistically, stopping/limiting the ability to take orders is debatably the worst things that can happen, directly targeting service availability and brand/reputation.  
+- **Get Access to Confidential Data**: Again, it would be really bad if you could get access to financial data. PII can be valuable, but financial data would definitely be the higher impact thing to pull from customer data and also affects the brand/reputation. 
+- **Free Food**: This one might seem a little selfish, but hijacking whatever system is in place to make orders to get free food has impacts more relevant than just satiating our appetites. Alternatively, if we can find software-level vulnerabilities to place fraudulent orders, that could be another way of achieving attacks on order integrity.
+
+That was a lot, but hopefully it was easy enough to follow. If it wasn't, maybe the rough diagram I mocked up can clear things up?
+
+![xkcd](https://an00brektn.github.io/img/restaurant-hacking/Restaurant%20Threat%20Model.png)
+
+Admittedly, not my finest work, but the the main takeaway here is just to see what could be hooked up to what and get an abstract sense of the spheres of influence. For instance, we can see that at the end of the day, all of the restaurant appliances hook into the same L3 switch (Wired Network). If the restaurant does not do their networking properly, we could have a situation where someone connected to the Guest Wi-Fi could start reaching services on the Point of Sale devices, which is bad, to say the least. On that note, if proper network segmentation is implemented, the only way for a Restaurant Customer to interact with the Point of Sale devices is to perform some sort of physical attack. Maybe that fact was obvious, but a diagram can help point out specific data flows that are relevant to the test.
+
+
+<Callout title="On Hardware Hacking" variant="note">
+Speaking of physical attacks, if you know absolutely nothing about hardware attacks, I'd recommend jumping to the hardware hacking subpost by using the subposts sidebar/header.
+</Callout>
+
+## Fun Attack Surfaces and Where to Find Them
+Now that we have a sketch of what data flows are present in the restaurant, we can put together a list of what we think the most impactful attacks are and search for them. Even though we went through this whole process of threat modeling and considering an environment that isn't just an office or a single web application, a lot of standard pentesting techniques still carry over here. For instance, if an environment is running Windows 10 anywhere, it's absolutely worth checking the patch information to find kernel exploits. If the kiosk is using Android or iOS under the hood, you might not be able to perform traditional Linux privilege escalation, but any technique related to WebViews, intents, or services is still fair game.
+
+With that in mind, we could spend all day making up hypothetical situations where we have HTB/OSCP-style machines and pivots. Instead, let's talk about what doesn't show up in CTFs as much.
+
+### Wireless Attacks
+I'm starting with wireless because let's be totally honest, attacks against Wi-Fi haven't really changed in the last 5-10 years. Not to say that the area isn't being actively researched, [airsnitch](https://github.com/vanhoefm/airsnitch) is a recent technique that claims to break client isolation, however, the core test cases covered by a traditional wireless test haven't changed all too much. 
+
+The average wireless pentest goes something like this:
+- Test for network segmentation to ensure that if you're on a guest network, you can't reach other devices.
+- Identify what wireless networks are present and what encryption they're using (e.g. WEP, WPA, WPA2, WPA3)
+- Sniff network traffic to see if anything sensitive is just straight up unencrypted
+- Depending on what's present, perform the attacks relevant to the configuration and see if you can get unauthorized access to the authenticated networks
+
+There's also techniques out there related to rouge access points or performing web attacks against captive portals, but ultimately, if you go through the checklist of testing a given Wi-Fi network and don't find anything, there's not much else you can do. This [blog on Medium](https://medium.com/@neonmaxima/what-i-learned-hacking-hotel-wifi-for-three-months-straight-9730e871fad0) paints a realistic picture of vulnerabilities in wireless networks at hotels, and this [OSWP cheatsheet](https://liodeus.github.io/2020/10/29/OSWP-personal-cheatsheet.html) is a pretty good checklist for the main attacks.
+
+### Kiosk Escapes
+If you read the hardware attacks tangent, you should have a better sense of what kind of things we might look for when performing physical or hardware-based attacks. In the case of kiosks, though, assuming there isn't any easy to reach port, your only attack surface without disassembling the whole thing is the user interface. This [writeup from IOActive](https://www.ioactive.com/in-flight-hacking-system/) highlights one such case on an airplane where one sequence of inputs showed debug information that let them find the firmware on the internet, which they then reverse engineered to find many vulnerabilities in the in-flight entertainment system. Although the post is a decade old now, the general approach holds up.
+
+There are [methodologies](https://swisskyrepo.github.io/InternalAllTheThings/cheatsheets/escape-breakout/) for kiosk escapes/breakouts out there, but the guiding principle is simple: find something that gives you access to a menu or a prompt from the OS instead of the main application, and use that access to get a shell on the OS. Classic examples include finding print functionality or finding a way to access arbitrary web pages, but there are no hard and fast rules here. 
+
+![airplane](https://an00brektn.github.io/img/restaurant-hacking/Pasted%20image%2020260408132434.png)
+<sup>Courtesy: [The Hacker News](https://thehackernews.com/2014/08/airplanes-can-be-hacked-through_4.html)</sup>
+
+One of my favorite things to test for are accessibility/shortcut sequences that weren't locked down. More specifically, if you've ever used a tablet and closed out of an app using five fingers to pinch the screen, or maybe swiped down from the top of the screen, those same techniques could apply to kiosks that are deployed in the real world. In fact, I'd say my first "hack" was when I was 12, when I was at a museum and noticed that they were using iPads for their touchscreen displays. By using the five finger pinch, I was able to close out of the exhibit information and open YouTube! I put it back, obviously, but these sequences are usually things that need to be explicitly disabled.
+
+> One more thing to note: the `--kiosk` flag on Chromium isn't actually a catch-all solution for locking down a browser. This [post from ericlaw](https://textslashplain.com/2022/01/06/lock-down-web-browsing-using-kiosk-mode/) discusses some of the quirks with browsers and this flag in particular. Make sure you're exhausting all of your options when testing for breakouts, no matter how stupid you might look while rubbing your hands all over a screen.
+
+### Application Hacking (burpless)
+If you read the IOActive post linked in the previous section, you may have seen a screenshot with PHP including a blatant SQL injection vulnerability.
+
+```php title="im/db.php" startLineNumber={363}
+function addToBuddyList($userid, $buddyid){
+	if(empty($this->db))
+		$this->connect();
+		
+	//$userid = mysql_real_escape_string($userid);
+	//$buddyid = mysql_real_escape_string($buddyid);
+	
+	$query = "SELECT COUNT(*) FROM in.s2s_buddies WHERE user_id = '$userid' AND buddy_id = '$buddyid'";
+// trim...
+```
+
+In most circumstances, this would absolutely be a high/critical severity vulnerability and you'd call it a day. If the tablet let you specify arbitrary text in the `$buddyid` field, it would be the end of the story, but you have to remember that unlike a typical web pentest, we can't just assume we have Burp set up.
+
+The reason for many web vulnerabilities is because traffic originates from the client and goes to the server, and it's extremely easy to set up a proxy (e.g. BurpSuite) to manipulate that traffic even if you have code on the client side forcing people to only use numbers, for instance. In the case of a kiosk/tablet, we are not guaranteed access to a proxy!
+
+If I ran into this code on an engagement, I would absolutely report the insecure design pattern. That said, how I choose to represent the vulnerability in the report is contingent on how **exploitable** the vulnerability is. For someone to prioritize their patching efforts, they need to know what the biggest threats are, so calling a SQL injection that can't be hacked without a privileged position (e.g. physically tapping the network, root access) a critical risk is, in some sense, misleading. Hopefully this isn't sounding repetitive, but this is the entire reason we created a threat model in the first place.
+
+### Take Note of Inputs and Outputs
+This section probably should've gone in the hardware attacks tangent, but I'm putting it here. When systems are meant to be interacted with by physical people, you need to consider *all* possible inputs. In the case of a checkout kiosk, the payment terminal likely doesn't have anything super exploitable unless you had the time to take it apart and reverse engineer it, but what about scanners? Bar codes and QR codes are just ways to encode plaintext data, meaning they're effectively the same as query parameters in a URL or data in a packet. Without having access to source code, it'd be hard to tell what the data gets used for, but depending on the context, it very well could lead to anything from a simple crash to command injection. 
+
+An additional point worth mentioning here is that if you have physical access to a device, forcing reboots or trying to access OS internals like [the GRUB CLI](https://stackoverflow.com/questions/7781886/etc-shadow-file-access-without-sudo) are absolutely fair game if it's possible. Going back to our restaurant example, as a customer, you probably don't have time to reboot a point of sale device to achieve some kind of race condition without raising suspicion, but a malicious employee can definitely unplug the machine to potentially mess with the boot sequence.
+
+On the topic of outputs, be sure to think about impact in terms specific to your environment, not just getting root shells or passwords. For instance, if there's a printer in the environment, getting `root` or equivalent access is not an end goal but a *means* to an end. With `root` access, you theoretically could start [using up all of the paper in the printer](https://nitter.net/wrccdc/status/1759804353505034461) or intercept print jobs to see if any [sensitive data is being submitted](https://blackhat.com/docs/us-17/thursday/us-17-Mueller-Exploiting-Network-Printers.pdf), but at the same time, you might not need `root` access to do that! Adversary simulations typically describe these types of objectives as "crown jewels", but it's a concept we can and should apply to any situation. 
+
+## Conclusion: Just Mess With Stuff
+At the end of the day, hacking has, and always will be, about taking intentional functionality and doing something completely unintended with it. Every environment will have differences, so trying to find the edge cases where things start to break down is where we thrive. If there's anything to take away from this brain dump of a blog post, it's that physical environments aren't actually that much more complicated than your typical network pentest or appsec assessment, there's just an added layer of finding ways to reach the usual appsec/network vulnerabilities.
+
+Additionally, threat modeling, whether you're just doing it in your head or writing up something more formal, is the key to explaining and demonstrating vulnerabilities that truly matter. Apart from simply organizing your thoughts, being able to articulate where security boundaries lie is a skill that applies to any environment and can help give your reports that extra impact they need to justify a bounty or a severity.

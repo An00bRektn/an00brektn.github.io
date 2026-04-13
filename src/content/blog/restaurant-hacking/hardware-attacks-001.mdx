@@ -1,0 +1,72 @@
+---
+authors:
+  - an00b
+date: 2026-04-13
+description: 001 because this comes before the 101
+order: 1
+tags:
+  - iot
+title: "Aside: Hardware Attacks 001"
+---
+import Callout from '@/components/Callout.astro'
+import { Icon } from 'astro-icon/components'
+
+> Shoutout Aaron, Cody, Garrett, and Will for the [crash course](https://training.defcon.org/products/bridging-the-gap-an-introduction-of-iot-security-from-serial-to-bluetooth-las-vegas-2025?variant=46290195054810) on some of this stuff!
+
+## The Context
+
+I like working from home. In fact, it's really nice that a lot of information security related tasks rarely require you to be in person. As a result though, I rarely have to think about physical attacks. If you look at CVSS scoring, these types of attack vectors are half of your options:
+
+![cvss](https://an00brektn.github.io/img/restaurant-hacking/Pasted%20image%2020260404142306.png)
+
+While I have have documented findings involving mobile and desktop applications where the attack vector involved some local user or physical extraction of data from a device, working with physical hardware can feel intimidating. After all, even [VoidStar Security's beginner's guide](https://voidstarsec.com/hw-hacking-lab/vss-lab-guide) can feel quite intimidating if you don't have a computer/electrical engineering background. Though it's true that the best hardware hackers know how to take apart circuit boards and do fancy hardware implant or decapping stuff, it is possible to understand this stuff at a high level.
+
+Going back to the discussion on unconventional attack surfaces, hardware hackers regularly have to think about different levels of access and realistic attack scenarios depending on how a device is used and interacted with. More specifically, hardware security isn't completely different from software security, there's just an added barrier of having to work with specific protocols/signals/inputs. I'm definitely not qualified to go into details about the most common types of inputs and outputs, but I can at the very least give a small example on how to take a look at hardware.
+
+## What's the Green Stuff?
+
+This is the board for a TP-Link router that I've labeled with some numbers to highlight areas of interest. Explaining computers and circuits from the ground up will obviously take way too long to do right, so let's keep it simple.
+- Circuits are just loops of electricity that are connected in a way to turn things on and off.
+- Computers are just really fancy circuits.
+- The green board is effectively compressing a circuit of tangled wires into a flatter, easier to work with object (entire careers are made out of designing and producing these).
+- The specifications for most of these components like 4 and 5 can be found online through effective Googling. This isn't necessarily true for every product, but the more common something is, the more likely you'll find stuff online without having to ask the manufacturer.
+
+![tplink-board](https://an00brektn.github.io/img/restaurant-hacking/Pasted%20image%2020260404150347.png)
+<sup>Courtesy: [PhobosK's Blog: How to turn your TP Link TL-WRT740 router into a fully functional one using OpenWRT](https://phobosk.wordpress.com/2012/10/21/how-to-turn-your-tp-link-tl-wrt740n-router-into-a-fully-functional-one-using-openwrt/)</sup>
+
+1. There's another picture on PhobosK's blog that makes this easier to see, but these are the different **Ethernet ports** that you would connect to the router to get access to the internet. It's quite obvious that this is how the device works, it's a router after all, but it's worth recognizing that physical access to these ports typically gives you access to the router web management interface, which [could have vulnerabilities in it](https://www.zerodayinitiative.com/blog/2023/4/21/tp-link-wan-side-vulnerability-cve-2023-1389-added-to-the-mirai-botnet-arsenal).
+2. From left to right, this is the **power button**, the place where the **power cable** connects, and then the **reset button**. I don't fully know how the reset works, but what's important is that we're getting a sense of what physical inputs we have to the system. 
+3. These are just two of the many **capacitors** on the board, which store energy as current flows through the circuit. They could be used for any number of reasons, one of the most common ones being to deliver current when a circuit is in an "off" state (e.g. if a device has ever had a lit LED indicating it's off). Mostly pointing this out so some of the electrical-specific components make sense.
+4. This is one of the many integrated circuits on the board, specifically the [**system on a chip**](https://en.wikipedia.org/wiki/System_on_a_chip), which I figured out by Googling whatever text is written on top of the chip. This is effectively the main part of the computer, containing the CPU with I/O hooked up to the rest of the board. 
+5. Once again, doing some Googling, I found that this was the **RAM** ([datasheet](https://kean.com.au/oshw/WR703N/teardown/Zentel%20A3S56D40FTP%20DDR%20256Mb%20SDRAM.pdf)) for the router. There could be interesting data in here, but not necessarily the first place you'd try to attack since the memory is volatile. Still good to know in case you're tracing pins and connections.
+6. These **diodes** are specifically LEDs intended to indicate certain statuses for the router. Generally speaking, diodes act as a one-way switch for current.
+7. After a mix of reading labels, following connections, and general vibes, we see the **pin outs** which are used to potentially get access to send and receive data from the board. 
+
+## Becoming a Silicon Whisperer
+That last point can often be the most interesting when it comes to hardware testing because this can be the quickest way to send and receive data from the board. Debug interfaces such as JTAG, SWD, and UART, depending on what the vendor has implemented, could provide anything from simple read-only information, shell access, or even debug access to manipulate registers and such.
+
+There are also scenarios where instead of going through a debug interface, you're directly trying to do stuff with hardware communication protocols, which define how data moves between components. You've probably heard of Ethernet and USB, but you'll also hear acronyms such as SPI, I2C, CAN, etc. The crux of this is that there is a structured way for how data flows, such as a sensor returning data or a CPU talking to a flash chip.
+
+I'm still learning about these things, so to learn more about hardware hacking, check out the resources below:
+- [HardBreak: Hardware Hacking Wiki](https://www.hardbreak.wiki/hardware-hacking/interface-interaction)
+- [LiveOverflow](https://www.youtube.com/@LiveOverflow)
+- [Joe Grand](https://www.youtube.com/@JoeGrand)
+- [stacksmashing](https://www.youtube.com/@stacksmashing/videos)
+- [Andrew Bellini - DEFCON 32: Anyone can hack IoT](https://www.youtube.com/watch?v=YPcOwKtRuDQ)
+
+## I'm Not a Silicon Whisperer
+Realistically speaking, you could spend a lot of time trying to reverse engineer and understand hardware from a completely blackbox perspective. But, if we're on a short timeline and are trying to hack a full environment, we probably can't justify spending an entire week trying to find all of the debug interfaces or some obscure side-channel that lets us listen to very specific bits. JTAG is cool, but how often are you going to be able to get direct access to a board to hook up wires?
+
+![hak5](https://an00brektn.github.io/img/restaurant-hacking/Pasted%20image%2020260408134538.png)
+<sup>Finally, I have a use for all of the Hak5 gear I wanted to buy but could never justify because I can only hack myself for so long! (Courtesy: [Hak5](https://shop.hak5.org/pages/field-kit-collection))</sup>
+
+For low-hanging fruit, depending on the environment, the first places we should be looking are USB, Ethernet, and any displays we can physically touch. Especially when you're dealing with kiosk devices, there's many things to try:
+
+- **k e y b o a r d**: If there's USB exposed, it's absolutely worth trying to plug in some sort of peripheral like a keyboard or a mouse to see if you can use it to break out and work with the operating system itself. In the real world, you might automate all of the keystrokes you want with some [programmable USB](https://github.com/MTK911/Attiny85).
+- **USB to Ethernet**: If USB really isn't locked down, another type of attack to consider is plugging in a USB to Ethernet cable to get access to the local network. If the kiosk is serving some sort of debug interface (e.g. telnet, adb), this could be another way to get foothold. 
+- **Network Tap**: MITM/AITM attacks aren't always feasible when you're working from a remote position, but when you're in person, why not try and tap the network? You may find that some local networks make the assumption that it's okay to run cleartext protocols in a network where people aren't usually connecting workstations, but depending on the circumstances, those assumptions can easily be challenged. 
+- **literally anything with a [flipper zero](https://flipper.net/)**: This thing does it all. You can clone RFID, send out infrared, attack Wi-Fi, be a [rubber ducky](https://shop.hak5.org/products/usb-rubber-ducky), and that's just the basic stuff.  
+
+Like most disciplines of security, there's levels to this, so deciding how deep you want to go is important to ensure you're spending your time wisely. 
+
+> You also don't need to buy $1000 of Hak5 gear to do any of these attacks. They're good quality builds, but unless you need something super low profile like an OMG Cable, it's actually not hard to build a lot of these on your own. 
